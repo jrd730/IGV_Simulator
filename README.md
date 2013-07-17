@@ -20,6 +20,7 @@
 >  +  What methodology is needed to find a path?
 >  +  How can we be sure that our path is **drivable**?
 >  +  How do we define **drivable**? (ie: max turn radius at given speeds, not enough space, ..)
+
 ## 
 --
 >  +  Bot has Search Radius. When an obstacle enters the Bot radius.. the Bot must store the position of said obstacle

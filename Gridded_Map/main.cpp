@@ -27,9 +27,10 @@
     //     '+' - increases the number of curves displayed
 
 *********************************************************************************************/
- 
-#include "PSeries.h"
+
 #include "Vertex.h"
+#include "IGV_Bot.h"
+#include "GridObject.h"
 #include "GA_CONSTANTS.h"
 #include <algorithm>
 #include <cmath>
@@ -37,6 +38,7 @@
 #include <fstream>
 //#include <windows.h>
 #include <iostream>
+#include <vector>
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
@@ -44,17 +46,18 @@
 #endif
 #include <stdlib.h>
 
+
 using namespace std;
 
 
 long double randomFloat ();
 void initialize ();
-void score ();
+
 void update ();
-void displayBest ();
+
 void perform_glow_effect_grid(float coord_x, float coord_y, float bwidth, float bheight);
 
-bool operator < (PSeries first, PSeries second){return first.difference < second.difference;}
+//bool operator < (PSeries first, PSeries second){return first.difference < second.difference;}
 
 
 /*  Important Consideration:
@@ -84,24 +87,18 @@ float graphYRange = graphYMax - graphYMin;
 float pixToYCoord = graphYRange/height;
 
 // GRID width & height of entire window..
-const static int grid_width     = 7;
-const static int grid_height    = 7;
-const static float pix_per_grid_width  = (width * 1.0) / (grid_width-1);        
-const static float pix_per_grid_height = (height * 1.0) / (grid_height-1);
-float incr_next_col = graphXMax / (grid_width/2);
-float incr_next_row = graphYMax / (grid_height/2);
+const static int grid_blocks_x   = 7;
+const static int grid_blocks_y   = 7;
+
+const static float pix_per_grid_block_x = (width * 1.0) / (grid_blocks_x-1);        
+const static float pix_per_grid_block_y = (height * 1.0) / (grid_blocks_y-1);
+float incr_next_col = graphXMax / (grid_blocks_x/2);
+float incr_next_row = graphYMax / (grid_blocks_y/2);
 
 /* Finds the indecies in the grid at pixel x..*/
-#define grid_X(x) (int)(x / pix_per_grid_width) 
-#define grid_Y(y) (int)(y / pix_per_grid_height)
+#define grid_X(x) (int)(x / pix_per_grid_block_x) 
+#define grid_Y(y) (int)(y / pix_per_grid_block_y)
 
-class Player{
-    public:
-        Player(){ x = 0; y = 0;}
-        int x;  //pixels..
-        int y;
-
-};
 
 
 class CollidableObject{
@@ -110,10 +107,10 @@ class CollidableObject{
         CollidableObject(int _x, int _y, unsigned char _type = 0){
             x = _x;   y = _y;   type = _type;   
      
-            coord_x = grid_X(x) * pix_per_grid_width*pixToXCoord + graphXMin; 
-            coord_y = -1*((grid_Y(y)+1) * pix_per_grid_height*pixToYCoord) + graphYMax; 
-            width = pix_per_grid_width*pixToXCoord;
-            height = pix_per_grid_height*pixToYCoord;
+            coord_x = grid_X(x) * pix_per_grid_block_x*pixToXCoord + graphXMin; 
+            coord_y = -1*((grid_Y(y)+1) * pix_per_grid_block_y*pixToYCoord) + graphYMax; 
+            width = pix_per_grid_block_x*pixToXCoord;
+            height = pix_per_grid_block_y*pixToYCoord;
         }
 
         void glow_red(){
@@ -137,33 +134,16 @@ class CollidableObject{
 };
 
 
-// or maybe a grid tree?
-class GridSquare{
-    public:
-        GridSquare(CollidableObject* obj_to_set = NULL){
-            is_object = false;
-            object = obj_to_set;
-        }
-        void glow(){ }
-        bool is_object;
-        CollidableObject* object;
-        int x;   //pixels
-        int y;
-};
 
 
-
-
-//PSeries
-vector <PSeries> ps;
 
 //Target Points
 vector <vertex> targetPoint;
 vector <CollidableObject*> collidable_vector;
 
 /* THE GRID */
-GridSquare*  TheGrid[grid_width][grid_height];
-Player PLAYER;
+GridSquare*  TheGrid[grid_blocks_x][grid_blocks_y];
+IGV_Bot PLAYER;
 
 
 
@@ -196,90 +176,17 @@ long double randomFloat (){
     return x;
 }
 
-PSeries randomPSeries (int maxdegree)
-{
-    PSeries p;
-    for (int j=0; j<=maxdegree; j++){
-        p.addTerm( -(randomFloat() * initial[j])/2.0 + (randomFloat() * initial[j]) );
-    }
 
-    return p;
-}
-
-/* determine the total difference of the given pseries  */
-void score ()
-{
-    for (unsigned i=0; i<ps.size(); i++){
-        long double totalDifference = 0;
-        for (unsigned j=0; j<targetPoint.size(); j++){
-
-            // difference between y values... (from line to target..)
-            totalDifference += abs(ps[i].evaluate(targetPoint[j].x) - targetPoint[j].y );
-        }
-        ps[i].difference = totalDifference;
-        ps[i].avgDifference = totalDifference/targetPoint.size();
-    }
-    stable_sort (ps.begin(), ps.end());
-}
-
-/* Calling during idling... Animates the PSeries on the screen 
+/* Calling during idling... Animates the stuff on the screen 
     Main logic...
 */
 void update ()
 {
 
 
-    // vector <PSeries> newGen;
-    // newGen.resize(MAX_POPULATION+CLONES);
 
-    // unsigned i=0;
-    // for (; i<CLONES; i++){
-    //     newGen[i] = ps[i];
-    // }
-    // for (; i<newGen.size(); i++){
-    //     PSeries parent1 = ps[ rand()%ps.size() * PARENTING_RATE ];
-    //     PSeries parent2 = ps[ rand()%ps.size() * PARENTING_RATE ];
-    //     PSeries child;
-
-    //     int crossover = rand()%(MAX_DEGREE+1);
-    //     for (int j=0; j<crossover; j++){
-    //         child.addTerm(parent1.coefficient[j]);
-    //     }
-    //     for (int j=crossover; j<=MAX_DEGREE; j++){
-    //         child.addTerm(parent2.coefficient[j]);
-    //     }
-
-    //     if (randomFloat() <= MUTATION_RATE){
-    //         int mutatedGene = rand()%(MAX_DEGREE+1);
-    //         if (rand()%2 == 1)
-    //             child.coefficient[mutatedGene] += (randomFloat () * modifier[mutatedGene]);
-    //         else
-    //             child.coefficient[mutatedGene] -= (randomFloat () * modifier[mutatedGene]);
-    //     }
-    //     newGen[i] = child;
-    // }
-    // ps = newGen;
-    // generation++;
-    // score();    // determine distance between current result and expected results
 
 }
-
-void displayBest ()
-{
-    cout << "Best candidate from generation " << generation << "\n";
-    cout << "Y =";
-    for (unsigned j=0; j<ps[0].coefficient.size(); j++){
-        if (ps[0].coefficient[j] != 0){
-            cout << " ("  << ps[0].coefficient[j] << " * X^" << j << ") ";
-            if (j < ps[0].coefficient.size()-1)
-                cout << "+";
-        }
-    }
-    cout << "\n";
-    cout << "\ttotal difference  : " << ps[0].difference << "\n";
-    cout << "\taverage difference: " << ps[0].avgDifference << "\n\n";
-}
-
 
 
 
@@ -289,7 +196,7 @@ static void key(unsigned char key, int x, int y)
         case 't':
         case 'T':
             update();
-            displayBest();
+
          break;
 
         case 'g':
@@ -376,9 +283,7 @@ static void mouse (int button, int state, int x, int y)
 static void idle(void)
 {
     if (going){
-        if (ps[0].avgDifference > TARGET_AVG_DIFFERENCE && generation < MAX_GENERATIONS){
-            update();
-        }
+         update();
     }
     glutPostRedisplay();  // calls display()
     //sleep (15);
@@ -505,15 +410,9 @@ static void resize(int w, int h)
 
 void initialize ()
 {
-    generation = 0;
-    ps.clear();
-    ps.resize(MAX_POPULATION);
-    for (int i=0; i<MAX_POPULATION; i++){
-         ps[i] = randomPSeries(MAX_DEGREE);
-    }
-    for (int i = 0; i < grid_width; ++i)
+    for (int i = 0; i < grid_blocks_x; ++i)
     {
-        for (int j = 0; j < grid_height; ++j)
+        for (int j = 0; j < grid_blocks_y; ++j)
         {
             TheGrid[i][j] = new GridSquare(NULL);
         }
@@ -528,10 +427,7 @@ int main(int argc, char *argv[])
     fin.open(argv[1]);
     if (!fin.fail()){
         while (fin.good()){
-            long double newX, newY;
-            fin >> newX >> newY;
-            vertex newTargetPoint (newX, newY);
-            targetPoint.push_back(newTargetPoint);
+            // get input from file here..
         }
         cout << "complete!\n";
     }
@@ -539,18 +435,16 @@ int main(int argc, char *argv[])
         cout << "\nError: input file not found\n";
     }
 
-    cout << "Initializing population...";
+    cout << "Initializing Grid...";
     initialize ();
     cout << "complete!\n\n";
 
-    score ();
-    displayBest();
 
     glutInit(&argc, argv);
     glutInitWindowSize(width,height);
     glutInitWindowPosition(10,10);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutCreateWindow("Curve Fit");
+    glutCreateWindow("Grid System");
     glutReshapeFunc(resize);        // called on window resize
     glutDisplayFunc(display);       // called by glutPostRedisplay .. (or in glutMainLoop??)
     glutKeyboardFunc(key);          // interrupt handler on key press

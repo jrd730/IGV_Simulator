@@ -11,6 +11,9 @@ CPPFLAGS = -g -Wall -pedantic
 #   then add a -L/ for glut's lib directory in the next line
 LIBDIRS  = -L/usr/X11R6/lib  
 LIBS = -lX11 -lglut -lGL -lGLU -lm -lfl
+
+SRC = main.cpp IGV_Bot.cpp GridObject.cpp
+OBJ = $(SRC:.cpp=.o)
 # older versions of linux might also need -lXi and -lXmu 
 
 # OS X (comment out next two lines if not using OSX
@@ -19,8 +22,12 @@ LIBS = -lX11 -lglut -lGL -lGLU -lm -lfl
 
 TARGET=grids
 
-$(TARGET): main.cpp PSeries.cpp 
-	$(CXX) $(CPPFLAGS) $(OSX) -o $(TARGET) main.cpp PSeries.cpp $(LIBDIRS) $(LIBS)
+$(TARGET): $(OBJ)
+	$(CXX) $(CPPFLAGS) $(OSX) -o $(TARGET) $(OBJ) $(LIBDIRS) $(LIBS)
+
+# rul to build objects.. from source.. 
+$(OBJ): $(SRC)
+	$(CC) -c $(CFLAGS) $(SRC)
 
 clean:
-	rm -f $(C++OBJ) graph
+	rm -f $(OBJ) $(TARGET)

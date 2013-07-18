@@ -32,13 +32,28 @@ IGV Simulator:
 #endif
 #include <stdlib.h>
 
+using namespace std;
+typedef unsigned char   uchar;
+typedef long double     ld;
+
 #include "Vertex.h"
 #include "IGV_Bot.h"
-
-
 #include "Globals.h"
+#include "GridSquare.h"
+#include "CollidableObject.h"
 
 
+
+// Drawing settings..
+uchar      DRAW_GRID_LINES        = 1;    // the representation of the actual map
+uchar      DRAW_SIM_REAL_MAP      = 1;     // the objects populated on the map..
+uchar      DRAW_IGV_EXPLORED_MAP  = 0;    // the explored territory
+uchar      DRAW_IGV_PATH          = 0;    // path to travel
+uchar      DRAW_IGV_PATH_HISTORY  = 0;
+
+/*      GLOBALS 
+*/
+/* --------------- WINDOW & GRID PROPERTIES --------------- */
 // window
 int height = 600;
 int width = 800;
@@ -55,14 +70,7 @@ float graphYMax = 9;
 float graphYRange = graphYMax - graphYMin;
 float pixToYCoord = graphYRange/height;
 
-
-
-
-
 /* --------------- GRID PROPERTIES --------------- */
-
-
-
 // GRID width & height of entire window..
 const  int grid_blocks_x   = 24;
 const  int grid_blocks_y   = 24;
@@ -75,31 +83,23 @@ const  float pix_per_grid_block_y = (height * 1.0) / (grid_blocks_y);
 float incr_next_col = graphXMax / (grid_blocks_x/2);    // increment val
 float incr_next_row = graphYMax / (grid_blocks_y/2);
 
+// ================== END GLOBALS ================== //
 
 
 
-
-#include "GridSquare.h"
-#include "CollidableObject.h"
-
-
-
-
-using namespace std;
-
-typedef unsigned char uchar;
-
-
-
+/* = = = = = = = = = = = = =
+    Function Prototypes
+*/
 long double randomFloat ();
 bool initialize ();
 void update ();
 void clearTheGrid();
 
+
 //bool operator < (PSeries first, PSeries second){return first.difference < second.difference;}
 
 
-/*  Important Consideration:
+/*  Important Considerations: (DEALING WITH COORDS)
         Pixel coordinates start at top left of screen..
         Graph coordinates start at the center and are proportional 
             to 1 pixel  by  graphXRange/width and graphYRange/height.
@@ -107,48 +107,29 @@ void clearTheGrid();
         THE GRID starts at the top left (sits TheGrid[0][0])
 
         Problem:    Map pixel clicks to TheGrid Index..
-
 */
-
-// Drawing settings..
-uchar      DRAW_GRID_LINES        = 1;    // the representation of the actual map
-uchar      DRAW_SIM_REAL_MAP      = 1;     // the objects populated on the map..
-uchar      DRAW_IGV_EXPLORED_MAP  = 0;    // the explored territory
-uchar      DRAW_IGV_PATH          = 0;    // path to travel
-uchar      DRAW_IGV_PATH_HISTORY  = 0;
-
-
-
-
-
-
-
-
+// ----------------------------------   - - - - MAP OBJECTS
 //Target Points
 vector <vertex> targetPoint;
+
+//objects that are collidable..
 vector <WorldObject*> collidable_vector;
 
 /* THE GRID */
 GridSquare*  TheGrid[grid_blocks_x][grid_blocks_y];
+
+// --------------------------------//
+// ------   IGV  SETTINGS   ------ //
 IGV_Bot      PLAYER;
-
-
-
-
-
 static float PLAYER_X       = 1.0; 
 static float PLAYER_Y       = 1.0;
 static float PLAYER_WIDTH   = 1.0;
-
-
-bool going (false);
-int generation = 0;
-int showBest = 1;
-unsigned int cur_mouseclick_buttonpressed = -1;
-
-
-
-
+// ------ SIMULATOR  SETTINGS ------ //
+bool    going (false);
+int     generation  = 0;
+int     showBest    = 1;
+uint    cur_mouseclick_buttonpressed = -1;  // state variable
+// ------    END SETTINGS   ------ //
 
 
 
@@ -169,8 +150,6 @@ long double randomFloat (){
 */
 void update ()
 {
-
-
 
 
 }
@@ -354,7 +333,6 @@ static void display(void)
         collidable_vector[i]->glow();
     }
 
-       
        /* NEAR OR COLLISION */
 
     if (TheGrid[grid_X(PLAYER.x)][grid_Y(PLAYER.y)]->is_object){
@@ -362,10 +340,7 @@ static void display(void)
         TheGrid[grid_X(PLAYER.x)][grid_Y(PLAYER.y)]->glow();
     }
 
-
-
     /* IGV */
-
     // yellow square (the IGV)
     glColor3f (1, 1, 0);
     glPointSize (6.0);

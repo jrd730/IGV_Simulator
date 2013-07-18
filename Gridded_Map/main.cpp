@@ -1,30 +1,6 @@
 /******************************************************************************************
     
-    // genetic algorithms curve fit demo
-    // @author Jason Dietrich
-    // email: jrd730@gmail.com
 
-    // dependencies: OpenGL, GLUT
-
-    // command line: ./graph <input_file>
-
-    // input file format: <target_x-coordinate>  <target_y-coordinate>\n
-
-    // description: generates and displays a set of power series that attempt to pass through
-    // every (x,y) coordinate specified in the input file. Power series are evolved over many
-    // generations using a genetic algorithm. Click anywhere inside the window to add new 
-    // target points for the power series to try to pass through. The number of points that
-    // can be accurately included in a power series depends on the complexity of the figure 
-    // and the maximum degree specified in the constants file.
-
-    // key commands (with OpenGL window highlighted):
-    //     't' - steps simulation forward by one generation
-    //     'g' - continuously steps through generations until target fitness is reached 
-    //            or maximum generations are reached, press again to pause simulation
-    //     'c' - clears all target points
-    //     'r' - re-randomizes the population of power series
-    //     '-' - reduces the number of curves displayed
-    //     '+' - increases the number of curves displayed
 
 *********************************************************************************************/
 

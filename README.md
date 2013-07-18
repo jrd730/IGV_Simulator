@@ -7,8 +7,10 @@
 
 ## Project Details:
 
->  +  2d Map of Terrain contains: Obstacles, GPS Waypoints.
->  +  We need to get from Start to Target..
+>  +  Simualator contains 2D map of environment..
+>  +  Environment contains: Bot, Obstacles, GPS_Waypoints
+>  +  Bot needs to be able to move through the simulator; Pathfind from Start to Target
+>  +  Bot contains:  It's own information about the environment..
    
    
 ## Problems:
@@ -18,7 +20,18 @@
 >  +  What methodology is needed to find a path?
 >  +  How can we be sure that our path is **drivable**?
 >  +  How do we define **drivable**? (ie: max turn radius at given speeds, not enough space, ..)
-  
+
+## 
+--
+>  +  Bot has Search Radius. When an obstacle enters the Bot radius.. the Bot must store the position of said obstacle
+>  +  in it's internal map. (The Obstacle has it's own properties/functions that describe it's surface)
+>  +  When we need to generate the Bot's Path, the Bot needs to consider Obstacles in it's map
+>  +  When we need to identify obstacles.. we need to make a prediction given the information about the obstacle..
+ 
+>> #####   Predictions are based on: 
+>> +  Surface Structure (the part that is visible to us from our perspective)
+>> +  Color..
+
 
   
 ## Solutions:

@@ -31,3 +31,8 @@ $(OBJ): $(SRC)
 
 clean:
 	rm -f $(OBJ) $(TARGET)
+
+
+cleano:
+	rm -f $(OBJ)
+

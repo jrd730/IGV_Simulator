@@ -63,11 +63,11 @@ float graphYRange = graphYMax - graphYMin;
 float pixToYCoord = graphYRange/height;
 
 // GRID width & height of entire window..
-const static int grid_blocks_x   = 7;
-const static int grid_blocks_y   = 7;
+const static int grid_blocks_x   = 24;
+const static int grid_blocks_y   = 24;
 
-const static float pix_per_grid_block_x = (width * 1.0) / (grid_blocks_x-1);        
-const static float pix_per_grid_block_y = (height * 1.0) / (grid_blocks_y-1);
+const static float pix_per_grid_block_x = (width * 1.0) / (grid_blocks_x);        
+const static float pix_per_grid_block_y = (height * 1.0) / (grid_blocks_y);
 float incr_next_col = graphXMax / (grid_blocks_x/2);
 float incr_next_row = graphYMax / (grid_blocks_y/2);
 
@@ -119,7 +119,7 @@ vector <CollidableObject*> collidable_vector;
 
 /* THE GRID */
 GridSquare*  TheGrid[grid_blocks_x][grid_blocks_y];
-IGV_Bot PLAYER;
+IGV_Bot      PLAYER;
 
 
 
@@ -245,9 +245,10 @@ static void mouse (int button, int state, int x, int y)
                 targetPoint.push_back(newpoint);
 
 
+                delete TheGrid[grid_X(x)][grid_Y(y)]->object;
                 TheGrid[grid_X(x)][grid_Y(y)]->object = new CollidableObject((x), (y));
                 TheGrid[grid_X(x)][grid_Y(y)]->is_object = true;
-                cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
+                //cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
                 collidable_vector.push_back(TheGrid[grid_X(x)][grid_Y(y)]->object);
             break;
         }

@@ -1,13 +1,23 @@
 /******************************************************************************************
     
+IGV Simulator:
 
+    TODO:
+    Simulator keeps track of objects and IGV in the REAL MAP..
+    IGV_Bot moves around on the REAL MAP.. 
+        -> Expects to move to point A: -> stores Point A as it's Location in IGV_Bot->EXPLORED_MAP
+        -> However, the IGV_Bots actual location might not be point A.
+            --> the Simulator knows this.. and the REAL MAP keeps track of this.
+            (Simulator needs to randomly change the bot's position OR
+                the IGV needs to place itself incorrectly on the REAL MAP (delibrately))
+    
 
 *********************************************************************************************/
 
-#include "Vertex.h"
-#include "IGV_Bot.h"
-#include "GridObject.h"
+
 #include "GA_CONSTANTS.h"
+
+
 #include <algorithm>
 #include <cmath>
 #include <ctime>
@@ -22,16 +32,69 @@
 #endif
 #include <stdlib.h>
 
+#include "Vertex.h"
+#include "IGV_Bot.h"
+
+
+#include "Globals.h"
+
+
+// window
+int height = 600;
+int width = 800;
+
+// X graph min/max + ratio
+float graphXMin = -12;
+float graphXMax = 12;
+float graphXRange = graphXMax - graphXMin;
+float pixToXCoord = graphXRange/width;
+
+// Y graph min/max + ratio
+float graphYMin = -9;
+float graphYMax = 9;
+float graphYRange = graphYMax - graphYMin;
+float pixToYCoord = graphYRange/height;
+
+
+
+
+
+/* --------------- GRID PROPERTIES --------------- */
+
+
+
+// GRID width & height of entire window..
+const  int grid_blocks_x   = 24;
+const  int grid_blocks_y   = 24;
+
+
+const  float pix_per_grid_block_x = (width * 1.0) / (grid_blocks_x);        
+const  float pix_per_grid_block_y = (height * 1.0) / (grid_blocks_y);
+
+
+float incr_next_col = graphXMax / (grid_blocks_x/2);    // increment val
+float incr_next_row = graphYMax / (grid_blocks_y/2);
+
+
+
+
+
+#include "GridSquare.h"
+#include "CollidableObject.h"
+
+
+
 
 using namespace std;
 
+typedef unsigned char uchar;
+
+
 
 long double randomFloat ();
-void initialize ();
-
+bool initialize ();
 void update ();
-
-void perform_glow_effect_grid(float coord_x, float coord_y, float bwidth, float bheight);
+void clearTheGrid();
 
 //bool operator < (PSeries first, PSeries second){return first.difference < second.difference;}
 
@@ -46,68 +109,16 @@ void perform_glow_effect_grid(float coord_x, float coord_y, float bwidth, float 
         Problem:    Map pixel clicks to TheGrid Index..
 
 */
-// window
-static int height = 600;
-static int width = 800;
 
-// X graph min/max + ratio
-static float graphXMin = -12;
-static float graphXMax = 12;
-float graphXRange = graphXMax - graphXMin;
-float pixToXCoord = graphXRange/width;
-
-// Y graph min/max + ratio
-static float graphYMin = -9;
-static float graphYMax = 9;
-float graphYRange = graphYMax - graphYMin;
-float pixToYCoord = graphYRange/height;
-
-// GRID width & height of entire window..
-const static int grid_blocks_x   = 24;
-const static int grid_blocks_y   = 24;
-
-const static float pix_per_grid_block_x = (width * 1.0) / (grid_blocks_x);        
-const static float pix_per_grid_block_y = (height * 1.0) / (grid_blocks_y);
-float incr_next_col = graphXMax / (grid_blocks_x/2);
-float incr_next_row = graphYMax / (grid_blocks_y/2);
-
-/* Finds the indecies in the grid at pixel x..*/
-#define grid_X(x) (int)(x / pix_per_grid_block_x) 
-#define grid_Y(y) (int)(y / pix_per_grid_block_y)
+// Drawing settings..
+uchar      DRAW_GRID_LINES        = 1;    // the representation of the actual map
+uchar      DRAW_SIM_REAL_MAP      = 1;     // the objects populated on the map..
+uchar      DRAW_IGV_EXPLORED_MAP  = 0;    // the explored territory
+uchar      DRAW_IGV_PATH          = 0;    // path to travel
+uchar      DRAW_IGV_PATH_HISTORY  = 0;
 
 
 
-class CollidableObject{
-    public: 
-        CollidableObject(){}
-        CollidableObject(int _x, int _y, unsigned char _type = 0){
-            x = _x;   y = _y;   type = _type;   
-     
-            coord_x = grid_X(x) * pix_per_grid_block_x*pixToXCoord + graphXMin; 
-            coord_y = -1*((grid_Y(y)+1) * pix_per_grid_block_y*pixToYCoord) + graphYMax; 
-            width = pix_per_grid_block_x*pixToXCoord;
-            height = pix_per_grid_block_y*pixToYCoord;
-        }
-
-        void glow_red(){
-            glColor3f (1, 0.1, 0);
-            perform_glow_effect_grid(coord_x, coord_y, width, height); 
-        }
-        void glow(){ 
-            glColor3f (0.5, 0.2, 0);
-            perform_glow_effect_grid(coord_x, coord_y, width, height); 
-        }
-
-        unsigned char type;
-        int x;  //pixels
-        int y;
-
-        // in graph coordinates...
-        float coord_x;
-        float coord_y;
-        float width;
-        float height;
-};
 
 
 
@@ -115,7 +126,7 @@ class CollidableObject{
 
 //Target Points
 vector <vertex> targetPoint;
-vector <CollidableObject*> collidable_vector;
+vector <WorldObject*> collidable_vector;
 
 /* THE GRID */
 GridSquare*  TheGrid[grid_blocks_x][grid_blocks_y];
@@ -168,11 +179,13 @@ void update ()
 
 static void key(unsigned char key, int x, int y)
 {
+    //int modifier_key_combo = glutGetModifiers();
+    //cout  << modifier_key_combo << ":"<< key << endl;
+
     switch (key){
         case 't':
         case 'T':
             update();
-
          break;
 
         case 'g':
@@ -183,12 +196,24 @@ static void key(unsigned char key, int x, int y)
         case 'c':
         case 'C':
             targetPoint.clear();
+            collidable_vector.clear();
+            clearTheGrid();
             generation = 0;
         break;
 
         case 'r':
         case 'R':
             initialize();
+        break;
+
+        case '!':
+            DRAW_GRID_LINES ^= 1;
+        break;
+        case '@':
+            DRAW_SIM_REAL_MAP ^= 1;
+        break;
+        case '#':
+            DRAW_IGV_EXPLORED_MAP ^= 1;
         break;
 
         case '+':
@@ -245,11 +270,14 @@ static void mouse (int button, int state, int x, int y)
                 targetPoint.push_back(newpoint);
 
 
-                delete TheGrid[grid_X(x)][grid_Y(y)]->object;
-                TheGrid[grid_X(x)][grid_Y(y)]->object = new CollidableObject((x), (y));
-                TheGrid[grid_X(x)][grid_Y(y)]->is_object = true;
-                //cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
-                collidable_vector.push_back(TheGrid[grid_X(x)][grid_Y(y)]->object);
+                if(TheGrid[grid_X(x)][grid_Y(y)]->object){
+                    // then its already there...
+                } else {
+                    TheGrid[grid_X(x)][grid_Y(y)]->object = new CollidableObject((x), (y));
+                    TheGrid[grid_X(x)][grid_Y(y)]->is_object = true;
+                    //cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
+                    collidable_vector.push_back(TheGrid[grid_X(x)][grid_Y(y)]->object);
+                }
             break;
         }
     } else { // GLUT_UP
@@ -270,26 +298,28 @@ static void display(void)
 {
     glClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-    glColor3f (0, 0, 1);
-    // the grid lines Y
-   for (long double y = graphYMin; y <= graphYMax; y += incr_next_row){
-        glBegin (GL_LINES);
-            glVertex2f (graphXMin, y);
-            glVertex2f (graphXMax, y);
-        glEnd();
+
+
+
+    if(DRAW_GRID_LINES == true){
+        glColor3f (0, 0, 1);
+        // the grid lines Y
+       for (long double y = graphYMin; y <= graphYMax; y += incr_next_row){
+            glBegin (GL_LINES);
+                glVertex2f (graphXMin, y);
+                glVertex2f (graphXMax, y);
+            glEnd();
+        }
+
+        // the grid lines X
+        for (long double x = graphXMin; x <= graphXMax; x += incr_next_col){
+           glBegin (GL_LINES);
+               glVertex2f (x, graphYMin);
+               glVertex2f (x, graphYMax);
+           glEnd();
+       }
     }
-
-    // the grid lines X
-    for (long double x = graphXMin; x <= graphXMax; x += incr_next_col){
-       glBegin (GL_LINES);
-           glVertex2f (x, graphYMin);
-           glVertex2f (x, graphYMax);
-       glEnd();
-   }
-
-
-    
-    // x/y axis
+            // x/y axis
     glColor3f (1, 1, 1);
     glBegin (GL_LINES);
         glVertex2f (0, graphYMax);
@@ -297,6 +327,9 @@ static void display(void)
         glVertex2f (graphXMax, 0);
         glVertex2f (graphXMin, 0);
     glEnd();
+
+
+    /* Objects on the Real Map */
 
     // red square
     glColor3f (1, 0, 0);
@@ -306,10 +339,6 @@ static void display(void)
         glVertex2f (1.5 , 1.5 );
         glVertex2f (0.5 , 1.5 );
     glEnd();
-
-
-
-
 
     //target points
     glColor3f (0, 0, 1);
@@ -326,14 +355,18 @@ static void display(void)
     }
 
        
+       /* NEAR OR COLLISION */
 
     if (TheGrid[grid_X(PLAYER.x)][grid_Y(PLAYER.y)]->is_object){
-        TheGrid[grid_X(PLAYER.x)][grid_Y(PLAYER.y)]->object->glow_red();
+        glColor3f (1, 0.1, 0);
+        TheGrid[grid_X(PLAYER.x)][grid_Y(PLAYER.y)]->glow();
     }
 
 
 
-    // yellow square (the player)
+    /* IGV */
+
+    // yellow square (the IGV)
     glColor3f (1, 1, 0);
     glPointSize (6.0);
     glBegin (GL_POLYGON);
@@ -385,15 +418,21 @@ static void resize(int w, int h)
 }
 
 
-void initialize ()
-{
+void clearTheGrid(){
     for (int i = 0; i < grid_blocks_x; ++i)
     {
         for (int j = 0; j < grid_blocks_y; ++j)
         {
-            TheGrid[i][j] = new GridSquare(NULL);
+            delete TheGrid[i][j];
+            TheGrid[i][j] = new GridSquare(i, j, NULL);
         }
     }
+}
+
+bool initialize ()
+{
+    clearTheGrid();
+    return true;
 }
 
 int main(int argc, char *argv[])
@@ -414,7 +453,7 @@ int main(int argc, char *argv[])
 
     cout << "Initializing Grid...";
     initialize ();
-    cout << "complete!\n\n";
+    cout << "complete!\n\n" ;
 
 
     glutInit(&argc, argv);
@@ -428,8 +467,10 @@ int main(int argc, char *argv[])
     glutMouseFunc(mouse);           // interrupt handler on mouse click
     glutMotionFunc(motion);         // interrupt handler on mouse move while button pressed
     glutIdleFunc(idle);             // called as much as glut can call it.. in mainLoop();
+
     glClearColor(0,0,0,0);
     glutMainLoop();
+
     return EXIT_SUCCESS;
 }
 

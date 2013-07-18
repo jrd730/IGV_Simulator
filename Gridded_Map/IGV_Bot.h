@@ -1,11 +1,5 @@
-#include <algorithm>
-#include <cmath>
-#include <ctime>
-#include <fstream>
-#include <stdlib.h>
-
-#include <iostream>
-#include <vector>
+#ifndef   IGV_BOT_H
+#define   IGV_BOT_H
 
 class IGV_Bot{
     public:
@@ -13,3 +7,6 @@ class IGV_Bot{
         int x;  //pixels..
         int y;
 };
+
+#endif
+

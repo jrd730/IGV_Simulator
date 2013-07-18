@@ -12,7 +12,7 @@ CPPFLAGS = -g -Wall -pedantic
 LIBDIRS  = -L/usr/X11R6/lib  
 LIBS = -lX11 -lglut -lGL -lGLU -lm -lfl
 
-SRC = main.cpp IGV_Bot.cpp GridObject.cpp
+SRC = IGV_Bot.cpp GridSquare.cpp CollidableObject.cpp WorldObject.cpp  main.cpp
 OBJ = $(SRC:.cpp=.o)
 # older versions of linux might also need -lXi and -lXmu 
 
@@ -22,12 +22,12 @@ OBJ = $(SRC:.cpp=.o)
 
 TARGET=grids
 
-$(TARGET): $(OBJ)
+$(TARGET): $(OBJ) 
 	$(CXX) $(CPPFLAGS) $(OSX) -o $(TARGET) $(OBJ) $(LIBDIRS) $(LIBS)
 
 # rul to build objects.. from source.. 
-$(OBJ): $(SRC)
-	$(CC) -c $(CFLAGS) $(SRC)
+$(OBJ): $(SRC) 
+	$(CC) -c $(CPPFLAGS) $(SRC)
 
 clean:
 	rm -f $(OBJ) $(TARGET)

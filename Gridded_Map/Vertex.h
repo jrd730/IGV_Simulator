@@ -1,3 +1,6 @@
+#ifndef VERTEX_
+#define VERTEX_
+
 class vertex
 {
     public:
@@ -18,3 +21,6 @@ class vertex
         long double x;
         long double y;
 };
+
+#endif 
+

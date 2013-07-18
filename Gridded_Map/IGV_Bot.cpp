@@ -1,5 +1,5 @@
-#include "IGV_Bot.h"
 
+#include "IGV_Bot.h"
 
 IGV_Bot::IGV_Bot(){ 
 	x = 0; 

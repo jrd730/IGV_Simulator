@@ -386,7 +386,9 @@ static void display(void)
         for(int grid_iter_y = min_grid_y; grid_iter_y < max_grid_y; ++grid_iter_y){
             for(int grid_iter_x = min_grid_x; grid_iter_x < max_grid_x; ++grid_iter_x){ 
                     // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
-                    if (TheGrid[grid_iter_x][grid_iter_y]->is_object){ 
+                    if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
+                        // do you have an object??
+                        // if so then  do some stuff with the object..
                         cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
                            << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
                         TheGrid[grid_iter_x][grid_iter_y]->glow();

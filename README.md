@@ -58,16 +58,17 @@
 --
 > #####		Map contains:  
 > - 		( generated as exploration continues..
-> -		  IGV update's its location and it's environment
-> - 		  in it's own map of the world )
+ 		  IGV update's its location and it's environment
+		  in it's own map of the world )
 > -		- IGV
 > -		- Obstacles
 > -		- Waypoints
 >
---
+
 > #####		Graph contains:
 > -		- Pathing data.. (relative/(and based solely on)/to the Map it has generated..)
->	Logic contains:
+
+> #####	Logic contains:
 > - 		- Driving, (updating it's location on the Simulator map..)
 > - 		- Update It's own map by discovering Surroundings.
 > - 		- Determine Pathing_Data given IGVs Map.. 

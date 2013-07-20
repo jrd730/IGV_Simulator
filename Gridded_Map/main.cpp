@@ -72,7 +72,7 @@ float pixToYCoord = graphYRange/height;
 
 /* --------------- GRID PROPERTIES --------------- */
 // GRID width & height of entire window..
-const  int grid_blocks_x   = 24;
+const  int grid_blocks_x   = 24; // of the width of the screen
 const  int grid_blocks_y   = 24;
 
 
@@ -93,6 +93,7 @@ float incr_next_row = graphYMax / (grid_blocks_y/2);
 long double randomFloat ();
 bool initialize ();
 void update ();
+void fillGrid();
 void clearTheGrid();
 
 
@@ -123,7 +124,7 @@ GridSquare*  TheGrid[grid_blocks_x][grid_blocks_y];
 IGV_Bot      PLAYER;
 static float PLAYER_X       = 1.0; 
 static float PLAYER_Y       = 1.0;
-static float PLAYER_WIDTH   = 1.0;
+static float PLAYER_WIDTH   = PLAYER.height_coord;
 // ------ SIMULATOR  SETTINGS ------ //
 bool    going (false);
 int     generation  = 0;
@@ -150,6 +151,7 @@ long double randomFloat (){
 */
 void update ()
 {
+
 
 
 }
@@ -183,6 +185,9 @@ static void key(unsigned char key, int x, int y)
         case 'r':
         case 'R':
             initialize();
+        break;
+        case 'f':
+            fillGrid();
         break;
 
         case '!':
@@ -219,9 +224,11 @@ static void motion (int x, int y)
     if(cur_mouseclick_buttonpressed == GLUT_LEFT_BUTTON){
             PLAYER_X = (x * pixToXCoord + graphXMin)  - PLAYER_WIDTH/2;
             PLAYER_Y = (-y * pixToYCoord + graphYMax) - PLAYER_WIDTH/2;
+            PLAYER.coord_x = PLAYER_X;  // graph coordinates..
+            PLAYER.coord_y = PLAYER_Y;
 
-            PLAYER.x = x;
-            PLAYER.y = y;
+            PLAYER.x = x + PLAYER.width/2;   // pixels..
+            PLAYER.y = y + PLAYER.height/2;
     }
     // cout << "mouse clicked at " << x << " " << y << endl;
     // cout << "new point at " << newpoint.x << " " << newpoint.y << endl;
@@ -234,10 +241,21 @@ static void mouse (int button, int state, int x, int y)
         switch (button){
             case GLUT_LEFT_BUTTON:
                 cur_mouseclick_buttonpressed = GLUT_LEFT_BUTTON;
-                PLAYER_X = (x * pixToXCoord + graphXMin)  - PLAYER_WIDTH/2;
+                // Simulator should be storing IGV's:
+                //      grid location
+                //      pixel location
+                //      graph coord location
+                // IGV :
+                //      grid location
+                //      pixel location
+                //      graph coord location
+                PLAYER_X = (x * pixToXCoord + graphXMin) - PLAYER_WIDTH/2;
                 PLAYER_Y = (-y * pixToYCoord + graphYMax) - PLAYER_WIDTH/2;
-                 PLAYER.x = x;
-                PLAYER.y = y;
+                PLAYER.coord_x = PLAYER_X;  // graph coordinates..
+                PLAYER.coord_y = PLAYER_Y;
+                PLAYER.x = x + PLAYER.width/2;   // pixels..
+                PLAYER.y = y + PLAYER.height/2;
+
 
                 // cout << "mouse clicked at " << x << " " << y << endl;
                 // cout << "new point at " << newpoint.x << " " << newpoint.y << endl;
@@ -329,16 +347,56 @@ static void display(void)
     glEnd();
 
     //for all collidable objects.. call its "glow" function..
+    glColor3f (0, 0.1, 1);
     for (unsigned int i = 0; i < collidable_vector.size(); ++i){
         collidable_vector[i]->glow();
     }
 
-       /* NEAR OR COLLISION */
 
-    if (TheGrid[grid_X(PLAYER.x)][grid_Y(PLAYER.y)]->is_object){
-        glColor3f (1, 0.1, 0);
-        TheGrid[grid_X(PLAYER.x)][grid_Y(PLAYER.y)]->glow();
-    }
+    // THIS REALLY should be moved to it's own draw function... 
+    // for now this just causes the obejcts within the IGV's 
+    // search radius to glow a pink color..
+    if(going){
+
+            /* NEAR OR COLLISION */
+        int min_grid_x = grid_X((PLAYER.x - PLAYER.searchRadius));
+        int max_grid_x = grid_X((PLAYER.x + PLAYER.searchRadius));
+        int min_grid_y = grid_Y((PLAYER.y - PLAYER.searchRadius));
+        int max_grid_y = grid_Y((PLAYER.y + PLAYER.searchRadius));
+
+
+        cout <<  min_grid_x << " " <<
+            max_grid_x << " " <<
+            min_grid_y << " " <<
+            max_grid_y << " " << endl;
+
+        glColor3f (1, 0.2, 0.4);
+
+        // check window bounds..
+        if(min_grid_x < 0)
+            min_grid_x = 0;
+        if(max_grid_x >= grid_blocks_x)
+            max_grid_x = grid_blocks_x-1;
+        if(min_grid_y < 0)
+            min_grid_y = 0;
+        if(max_grid_y >= grid_blocks_y)
+            max_grid_y = grid_blocks_y-1;
+         
+
+        for(int grid_iter_y = min_grid_y; grid_iter_y < max_grid_y; ++grid_iter_y){
+            for(int grid_iter_x = min_grid_x; grid_iter_x < max_grid_x; ++grid_iter_x){ 
+                    // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
+                    if (TheGrid[grid_iter_x][grid_iter_y]->is_object){ 
+                        cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
+                           << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
+                        TheGrid[grid_iter_x][grid_iter_y]->glow();
+                    }
+            }
+        }
+
+
+    } // end if going and simuating the IGV
+
 
     /* IGV */
     // yellow square (the IGV)
@@ -390,6 +448,24 @@ static void resize(int w, int h)
     gluOrtho2D (graphXMin, graphXMax, graphYMin, graphYMax);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+}
+
+/* assumes the grid has been initialized at least once */
+void fillGrid(){
+    for (int i = 0; i < grid_blocks_x; ++i)
+    {
+        for (int j = 0; j < grid_blocks_y; ++j)
+        {
+                if(TheGrid[i][j]->object){
+                    // then its already there...
+                } else {
+                    TheGrid[i][j]->object = new CollidableObject(i*(pix_per_grid_block_x+1), j*(pix_per_grid_block_y+1));
+                    TheGrid[i][j]->is_object = true;
+                    //cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
+                    collidable_vector.push_back(TheGrid[i][j]->object);
+                }
+        }
+    }
 }
 
 

@@ -18,8 +18,21 @@ $ grids <optional input file>
 
 Click anywhere in the window to add new points.
 
+Mouse
+----
+- Left Button   Move IGV.  (TODO: Select IGV Destination)
+- Right Button  Add obstacle to grid.
+
 Keys
 ----
 
-- 'c'  clear target points
+- 'c'  Clear Simulation Data (Resets the Simulation)
+- 'g'  Start Simulation
+- 'r'  Remove Obstacles
+- 'f'  Fill Grid With Obstacles..
+- 't'  call update() directly..
+
+- '!'  Show/Hide Grid lines
+- '@'  Show/Hide Real Map
+- '#'  Show/Hide IGV's generated Map based exploration of Real map.
 

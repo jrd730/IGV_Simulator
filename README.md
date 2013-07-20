@@ -18,8 +18,8 @@
 >  +  How can we describe objects in the map?
 >  +  How do we find the list of nearby objects we are interested in?
 >  +  What methodology is needed to find a path?
->  +  How can we be sure that our path is **drivable**?
->  +  How do we define **drivable**? (ie: max turn radius at given speeds, not enough space, ..)
+>  +  How can we be sure that our path is **drivable**? (A Path is one thing, the physical limitations of the IGV are another..)
+>  +  How do we define **drivable**? (ie: max turn radius at given speeds, not enough space, ..) 
 
 ## 
 --
@@ -36,24 +36,42 @@
   
 ## Solutions:
 
->   1.  Map<> 
->   2.  Using IGV(x,y) .. index into map.. 
->   3.  A* 
+>   1.  Points, whose shape covers a discrete surface area of the map.. stored in the Grid Map System
+>   2.  Using IGV(x,y) .. index into Grid Map.. +/- searchRadius
+>   3.  A* -> store/update path in graph structure (of paths) .. based on IGV's Discovered Environment
 >   4.  JSmoke libraries :)
->   5.  ...
+>   5.  (Define Limitations.. apply them to generating a close to optimal path.. maybe use some sampling techniques based on previous turning experience..
+ aka: we would have to train the bot by manually driving it... and generate Weights for turns and motion.. etc.. then we come back here and use our collected data...)
 
 ## Ideas:
 
-#### Path:
-Map starts out fully drivable with no obstacles..
+Simulator starts off with a Map of the World:
+	Map contains:
+		- IGV
+		- Obstacles
+	Logic contains:
+		- Collisions
+		- Drawing stuff onto screen
 
-Open space. Drivable along path: Start -> GPS Points -> Target 
 
-  + When IGV detects obstacle.. create two nodes, to the left and right of the obstacle (store in graph with distances h)
-  
-Detect obstacle with Camera Code..
+IGV
+	Map contains:  
+		( generated as exploration continues..
+		  IGV update's its location and it's environment
+		  in it's own map of the world )
+		- IGV
+		- Obstacles
+		- Waypoints
+	Graph contains:
+		- Pathing data.. (relative/(and based solely on)/to the Map it has generated..)
+	Logic contains:
+		- Driving, (updating it's location on the Simulator map..)
+		- Update It's own map by discovering Surroundings.
+		- Determine Pathing_Data given IGVs Map.. 
+		- Determine the likeliness this path is Correct, given Limitations and Error of Data..
+		- Make corrections and chose better path -> so the that IGV doesnt crash and burn..
+			(better is not more optimal.. it is just Drivable..)
 
-However, in the simulator we detect an obstacle by finding it in a map structure of some sort...
+	-> these are things to consider.. 
 
->   Use kd tree.
-
+####Please make changes to Ideas that need be updated. (for: accuracy & feasability)

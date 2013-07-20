@@ -28,9 +28,7 @@
 >  +  When we need to generate the Bot's Path, the Bot needs to consider Obstacles in it's map
 >  +  When we need to identify obstacles.. we need to make a prediction given the information about the obstacle..
  
->> #####   Predictions are based on: 
->> +  Surface Structure (the part that is visible to us from our perspective)
->> +  Color..
+
 
 
   
@@ -43,35 +41,40 @@
 >   5.  (Define Limitations.. apply them to generating a close to optimal path.. maybe use some sampling techniques based on previous turning experience..
  aka: we would have to train the bot by manually driving it... and generate Weights for turns and motion.. etc.. then we come back here and use our collected data...)
 
-## Ideas:
+## Ideas: 
 
-Simulator starts off with a Map of the World:
-	Map contains:
-		- IGV
-		- Obstacles
-	Logic contains:
-		- Collisions
-		- Drawing stuff onto screen
+> Simulator:
+--
+> #####	Map contains:
+> -		- IGV
+> -		- Obstacles
+> #####	Logic contains:
+> -		- Collisions
+> -		- Drawing stuff onto screen
+>
 
 
-IGV
-	Map contains:  
-		( generated as exploration continues..
-		  IGV update's its location and it's environment
-		  in it's own map of the world )
-		- IGV
-		- Obstacles
-		- Waypoints
-	Graph contains:
-		- Pathing data.. (relative/(and based solely on)/to the Map it has generated..)
-	Logic contains:
-		- Driving, (updating it's location on the Simulator map..)
-		- Update It's own map by discovering Surroundings.
-		- Determine Pathing_Data given IGVs Map.. 
-		- Determine the likeliness this path is Correct, given Limitations and Error of Data..
-		- Make corrections and chose better path -> so the that IGV doesnt crash and burn..
-			(better is not more optimal.. it is just Drivable..)
+> IGV
+--
+> #####		Map contains:  
+> - 		( generated as exploration continues..
+> -		  IGV update's its location and it's environment
+> - 		  in it's own map of the world )
+> -		- IGV
+> -		- Obstacles
+> -		- Waypoints
+>
+--
+> #####		Graph contains:
+> -		- Pathing data.. (relative/(and based solely on)/to the Map it has generated..)
+>	Logic contains:
+> - 		- Driving, (updating it's location on the Simulator map..)
+> - 		- Update It's own map by discovering Surroundings.
+> - 		- Determine Pathing_Data given IGVs Map.. 
+> - 		- Determine the likeliness this path is Correct, given Limitations and Error of Data..
+> - 		- Make corrections and chose better path -> so the that IGV doesnt crash and burn..
+> - 			(better is not more optimal.. it is just Drivable..)
 
-	-> these are things to consider.. 
+
 
 ####Please make changes to Ideas that need be updated. (for: accuracy & feasability)

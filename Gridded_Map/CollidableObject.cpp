@@ -1,6 +1,6 @@
 
 #include "CollidableObject.h"
-#include "Globals.h"
+
 
 
  CollidableObject::CollidableObject(){

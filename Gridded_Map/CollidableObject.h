@@ -2,7 +2,7 @@
 #define     COLLIDABLE_OBJECT
 
 #include "WorldObject.h"
-
+#include "Globals.h"
 
 /* --- */
 class CollidableObject : public WorldObject

@@ -161,6 +161,44 @@ void update ()
 {
 
 
+        /* NEAR OR COLLISION */
+        int min_grid_x = grid_X((IGV.x - IGV.searchRadius));
+        int max_grid_x = grid_X((IGV.x + IGV.searchRadius));
+        int min_grid_y = grid_Y((IGV.y - IGV.searchRadius));
+        int max_grid_y = grid_Y((IGV.y + IGV.searchRadius));
+
+        glColor3f (1, 0.2, 0.4);
+
+        // check window bounds..
+        if(min_grid_x < 0)
+            min_grid_x = 0;
+        if(min_grid_y < 0)
+            min_grid_y = 0;
+        if(max_grid_x > grid_blocks_x)
+            max_grid_x = grid_blocks_x;
+        if(max_grid_y > grid_blocks_y)
+            max_grid_y = grid_blocks_y;
+
+
+        cout << 
+        "min_x: "  <<  min_grid_x << ".. " <<
+        "max_x: "  <<  max_grid_x << ".." << endl << 
+        "min_y: "  <<  min_grid_y << ".. " <<
+        "max_y: "  <<  max_grid_y << ".. " << endl << endl;
+         
+
+        for(int grid_iter_y = min_grid_y; grid_iter_y < max_grid_y; ++grid_iter_y){
+            for(int grid_iter_x = min_grid_x; grid_iter_x < max_grid_x; ++grid_iter_x){ 
+                    // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
+                    if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
+                        // do you have an object??
+                        // if so then  do some stuff with the object..
+                        cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
+                           << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
+                        TheGrid[grid_iter_x][grid_iter_y]->glow();
+                    }
+            }
+        }
 
 }
 
@@ -265,7 +303,7 @@ static void mouse (int button, int state, int x, int y)
 static void idle(void)
 {
     if (going){
-         update();
+         //update();
     }
     glutPostRedisplay();  // calls display()
     //sleep (15);
@@ -322,7 +360,7 @@ static void display(void)
     glPointSize (6.0);
     glBegin (GL_POINTS);
         for (unsigned i=0; i<targetPoint.size(); i++){
-            glVertex2f (targetPoint[i].x, targetPoint[i].y);
+            //glVertex2f (targetPoint[i].x, targetPoint[i].y);
         }
     glEnd();
 
@@ -337,47 +375,7 @@ static void display(void)
     // for now this just causes the obejcts within the IGV's 
     // search radius to glow a pink color..
     if(going){
-
-            /* NEAR OR COLLISION */
-        int min_grid_x = grid_X((IGV.x - IGV.searchRadius));
-        int max_grid_x = grid_X((IGV.x + IGV.searchRadius));
-        int min_grid_y = grid_Y((IGV.y - IGV.searchRadius));
-        int max_grid_y = grid_Y((IGV.y + IGV.searchRadius));
-
-        glColor3f (1, 0.2, 0.4);
-
-        // check window bounds..
-        if(min_grid_x < 0)
-            min_grid_x = 0;
-        if(min_grid_y < 0)
-            min_grid_y = 0;
-        if(max_grid_x > grid_blocks_x)
-            max_grid_x = grid_blocks_x;
-        if(max_grid_y > grid_blocks_y)
-            max_grid_y = grid_blocks_y;
-
-
-        cout << 
-        "min_x: "  <<  min_grid_x << ".. " <<
-        "max_x: "  <<  max_grid_x << ".." << endl << 
-        "min_y: "  <<  min_grid_y << ".. " <<
-        "max_y: "  <<  max_grid_y << ".. " << endl << endl;
-         
-
-        for(int grid_iter_y = min_grid_y; grid_iter_y < max_grid_y; ++grid_iter_y){
-            for(int grid_iter_x = min_grid_x; grid_iter_x < max_grid_x; ++grid_iter_x){ 
-                    // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
-                    if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
-                        // do you have an object??
-                        // if so then  do some stuff with the object..
-                        cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
-                           << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
-                        TheGrid[grid_iter_x][grid_iter_y]->glow();
-                    }
-            }
-        }
-
-
+        update();
     } // end if going and simuating the IGV
 
 

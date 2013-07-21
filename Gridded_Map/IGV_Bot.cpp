@@ -4,7 +4,7 @@
 IGV_Bot::IGV_Bot(){ 
 	x = 100; 				//px
 	y = 100;
-	searchRadius = 80; //px
+	searchRadius = 120; //px
 
 	// pixels
 	width = 50;

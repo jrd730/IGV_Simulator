@@ -54,9 +54,9 @@ typedef long double     ld;
 
 
 // Drawing settings..
-uchar      DRAW_GRID_LINES        = 1;    // the representation of the actual map
-uchar      DRAW_SIM_REAL_MAP      = 1;     // the objects populated on the map..
-uchar      DRAW_IGV_EXPLORED_MAP  = 0;    // the explored territory
+uchar      DRAW_GRID_LINES        = 0;    // the representation of the grid
+uchar      DRAW_SIM_REAL_MAP      = 0;    // the objects populated on the WORLD/(real) map..
+uchar      DRAW_IGV_EXPLORED_MAP  = 1;    // the explored territory
 uchar      DRAW_IGV_PATH          = 0;    // path to travel
 uchar      DRAW_IGV_PATH_HISTORY  = 0;
 
@@ -82,8 +82,8 @@ float pixToYCoord = graphYRange/window.height;
 
 /* --------------- GRID PROPERTIES --------------- */
 // GRID width & height of entire window..
-const  int grid_blocks_x   = 70; // of the width of the screen
-const  int grid_blocks_y   = 70;
+const  int grid_blocks_x   = 80; // of the width of the screen
+const  int grid_blocks_y   = 80;
 
 
 const  float pix_per_grid_block_x = (window.width * 1.0) / (grid_blocks_x);        
@@ -366,10 +366,20 @@ static void display(void)
         }
     glEnd();
 
-    //for all collidable objects.. call its "glow" function..
-    glColor3f (0, 0.1, 1);
-    for (unsigned int i = 0; i < collidable_vector.size(); ++i){
-        collidable_vector[i]->glow();
+
+    //SHOW THE REAL MAP
+    if(DRAW_SIM_REAL_MAP){
+        // show the collidable objects on the map..
+        glColor3f (0, 0.1, 1);
+        for (unsigned int i = 0; i < collidable_vector.size(); ++i){
+            collidable_vector[i]->glow();
+        }
+    }      
+
+    // SHOW THE MAP THAT THE IGV KNOWS ABOUT...
+    if(DRAW_IGV_EXPLORED_MAP){
+        // then draw the IGV's map..
+        // IGV.displayMap();
     }
 
 

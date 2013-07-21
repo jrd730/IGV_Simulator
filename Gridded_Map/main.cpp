@@ -82,8 +82,8 @@ float pixToYCoord = graphYRange/window.height;
 
 /* --------------- GRID PROPERTIES --------------- */
 // GRID width & height of entire window..
-const  int grid_blocks_x   = 50; // of the width of the screen
-const  int grid_blocks_y   = 50;
+const  int grid_blocks_x   = 70; // of the width of the screen
+const  int grid_blocks_y   = 70;
 
 
 const  float pix_per_grid_block_x = (window.width * 1.0) / (grid_blocks_x);        
@@ -174,12 +174,13 @@ void update ()
             min_grid_x = 0;
         if(min_grid_y < 0)
             min_grid_y = 0;
-        if(max_grid_x > grid_blocks_x)
-            max_grid_x = grid_blocks_x;
-        if(max_grid_y > grid_blocks_y)
-            max_grid_y = grid_blocks_y;
+        if(max_grid_x >= grid_blocks_x)
+            max_grid_x = grid_blocks_x-1;
+        if(max_grid_y >= grid_blocks_y)
+            max_grid_y = grid_blocks_y-1;
 
 
+        cout << "igv: " << grid_X(IGV.x) << "," << grid_Y(IGV.y) << endl;
         cout << 
         "min_x: "  <<  min_grid_x << ".. " <<
         "max_x: "  <<  max_grid_x << ".." << endl << 
@@ -187,8 +188,9 @@ void update ()
         "max_y: "  <<  max_grid_y << ".. " << endl << endl;
          
 
-        for(int grid_iter_y = min_grid_y; grid_iter_y < max_grid_y; ++grid_iter_y){
-            for(int grid_iter_x = min_grid_x; grid_iter_x < max_grid_x; ++grid_iter_x){ 
+        // for all search spaces near the IGV .. if there is an object.. -> make it glow :)
+        for(int grid_iter_y = min_grid_y; grid_iter_y <= max_grid_y; ++grid_iter_y){
+            for(int grid_iter_x = min_grid_x; grid_iter_x <= max_grid_x; ++grid_iter_x){ 
                     // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
                     if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
                         // do you have an object??
@@ -465,7 +467,9 @@ void fillGrid(){
                 if(TheGrid[i][j]->object){
                     // then its already there...
                 } else {
-                    TheGrid[i][j]->object = new CollidableObject(i*(pix_per_grid_block_x+1), j*(pix_per_grid_block_y+1));
+                    TheGrid[i][j]->object 
+                        = new CollidableObject( i*pix_per_grid_block_x + pix_per_grid_block_x/2,
+                                                j*pix_per_grid_block_y + pix_per_grid_block_y/2);
                     TheGrid[i][j]->is_object = true;
                     //cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
                     collidable_vector.push_back(TheGrid[i][j]->object);

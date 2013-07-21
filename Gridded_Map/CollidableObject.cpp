@@ -7,6 +7,7 @@
 
  }
 
+// takes x and y pixel coordinates..
 CollidableObject::CollidableObject(int _x, int _y, unsigned char _type){
     x = _x;   y = _y;   type = _type;   
 

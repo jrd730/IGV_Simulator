@@ -278,8 +278,8 @@ static void key(unsigned char key, int x, int y)
 static void motion (int x, int y)
 {
     if(cur_mouseclick_buttonpressed == GLUT_LEFT_BUTTON){
-            MouseSelectedObject.moveTo(x,y);
-            //IGV->moveTo(x, y);
+            //MouseSelectedObject.moveTo(x,y);
+            IGV->moveTo(x, y);
     } else if(cur_mouseclick_buttonpressed == GLUT_RIGHT_BUTTON){
         addCollidableToGrid(x, y);
     }

@@ -63,6 +63,8 @@ uchar      DRAW_IGV_PATH_HISTORY  = 0;
 uchar      STATE_ADD_WAYPOINT     = 1;
 uchar      STATE_ADD_OBSTACLE     = 0;
 
+#define    GPS_WAYPOINT_RADIUS  5  // 5 pixels in the simulator..
+
 /*      GLOBALS 
 */
 /* --------------- WINDOW & GRID PROPERTIES --------------- */
@@ -171,46 +173,69 @@ void update ()
 {
 
 
-        /* NEAR OR COLLISION */
-        int min_grid_x = grid_X((IGV->x - IGV->searchRadius));
-        int max_grid_x = grid_X((IGV->x + IGV->searchRadius));
-        int min_grid_y = grid_Y((IGV->y - IGV->searchRadius));
-        int max_grid_y = grid_Y((IGV->y + IGV->searchRadius));
 
-        glColor3f (1, 0.2, 0.4);
+    /* NEAR OR COLLISION */
+    int min_grid_x = grid_X((IGV->x - IGV->searchRadius));
+    int max_grid_x = grid_X((IGV->x + IGV->searchRadius));
+    int min_grid_y = grid_Y((IGV->y - IGV->searchRadius));
+    int max_grid_y = grid_Y((IGV->y + IGV->searchRadius));
 
-        // check window bounds..
-        if(min_grid_x < 0)
-            min_grid_x = 0;
-        if(min_grid_y < 0)
-            min_grid_y = 0;
-        if(max_grid_x >= grid_blocks_x)
-            max_grid_x = grid_blocks_x-1;
-        if(max_grid_y >= grid_blocks_y)
-            max_grid_y = grid_blocks_y-1;
+    glColor3f (1, 0.2, 0.4);
+
+    // check window bounds..
+    if(min_grid_x < 0)
+        min_grid_x = 0;
+    if(min_grid_y < 0)
+        min_grid_y = 0;
+    if(max_grid_x >= grid_blocks_x)
+        max_grid_x = grid_blocks_x-1;
+    if(max_grid_y >= grid_blocks_y)
+        max_grid_y = grid_blocks_y-1;
 
 
-        cout << "igv: " << grid_X(IGV->x) << "," << grid_Y(IGV->y) << endl;
-        cout << 
-        "min_x: "  <<  min_grid_x << ".. " <<
-        "max_x: "  <<  max_grid_x << ".." << endl << 
-        "min_y: "  <<  min_grid_y << ".. " <<
-        "max_y: "  <<  max_grid_y << ".. " << endl << endl;
+    cout << "igv: " << grid_X(IGV->x) << "," << grid_Y(IGV->y) << endl;
+    cout << 
+    "min_x: "  <<  min_grid_x << ".. " <<
+    "max_x: "  <<  max_grid_x << ".." << endl << 
+    "min_y: "  <<  min_grid_y << ".. " <<
+    "max_y: "  <<  max_grid_y << ".. " << endl << endl;
 
-        
-        // for all search spaces near the IGV .. if there is an object.. -> make it glow :)
-        for(int grid_iter_y = min_grid_y; grid_iter_y <= max_grid_y; ++grid_iter_y){
-            for(int grid_iter_x = min_grid_x; grid_iter_x <= max_grid_x; ++grid_iter_x){ 
-                    // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
-                    if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
-                        // do you have an object??
-                        // if so then  do some stuff with the object..
-                         cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
-                            << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
-                        TheGrid[grid_iter_x][grid_iter_y]->glow();
-                    }
-            }
-        } 
+    
+    // for all search spaces near the IGV .. if there is an object.. -> make it glow :)
+    for(int grid_iter_y = min_grid_y; grid_iter_y <= max_grid_y; ++grid_iter_y){
+        for(int grid_iter_x = min_grid_x; grid_iter_x <= max_grid_x; ++grid_iter_x){ 
+                // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
+                if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
+                    // do you have an object??
+                    // if so then  do some stuff with the object..
+                     cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
+                        << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
+                    TheGrid[grid_iter_x][grid_iter_y]->glow();
+                }
+        }
+    } 
+
+    
+    /* UPDATE CURRENT POSITION by  moving a specified increment distance */
+    // given waypoints.. move to waypoints..
+
+    WayPoint* wp = IGV->waypoints.next();
+
+    float dx;
+    float dy;
+    float distance_to_travel;
+    if(wp != NULL){
+        dx = (wp->x - IGV->x);
+        dy = (wp->y - IGV->y);
+        distance_to_travel = sqrt(dx * dx + dy * dy);
+        if (distance_to_travel < GPS_WAYPOINT_RADIUS) {
+            IGV->waypoints.pop();
+        } else {  // figure out how much to move to get there..
+            IGV->moveTo( 5*(dx/distance_to_travel) + IGV->x,
+                         5*(dy/distance_to_travel) + IGV->y);
+        }   
+    }
+
 
 }
 

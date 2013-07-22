@@ -267,6 +267,13 @@ static void key(unsigned char key, int x, int y)
 
         case 'c':
         case 'C':
+            // randomly generate obstacles
+            for (int i=0; i < 50; ++i){
+                addCollidableToGrid( rand()%window.width, rand()%window.height);
+            }
+
+        break;
+        
         case 'r':
         case 'R':
             initialize();

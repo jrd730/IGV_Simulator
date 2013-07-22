@@ -1,40 +1,45 @@
 #ifndef   IGV_BOT_H
 #define   IGV_BOT_H
 
-#include "Globals.h"
+#include "WorldObject.h"
 
-class IGV_Bot{
+class IGV_Bot : public WorldObject
+{
     public:
         IGV_Bot();
+        IGV_Bot(int _x, int _y, unsigned char _type = -1);
+
         void moveTo(int _x, int _y);
-        //pixels coordinates
-        int x;  
-        int y;
+        void glow();
 
-        float searchRadius; // in pixels
-
-        // graph coordinates
+/*  In the base class:
+        // location in pixels 
+        int x; 
+        int y; 
+    
+        // location in graph coordinates
         float coord_x;
         float coord_y;
 
 
-        // ONLY SET WHEN CREATED! (i suppose)
-        // shape variables.. describe the shape..
-        //--------------------------------------
-        // pixels..
+        // shape in pixels..
         float height;
         float width;
+*/
 
-        //coord units
+        float searchRadius; // in pixels
+
+        // shpe in graph coord units
         float width_coord;
         float height_coord;
 
-
-        // simulator specific
+        // simulator specific, draw locations..
            // graph coordinates
         float draw_coord_x;
         float draw_coord_y;
 
+    private:
+        void init();
 
 };
 

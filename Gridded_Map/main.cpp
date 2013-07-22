@@ -54,8 +54,8 @@ typedef long double     ld;
 
 
 // Drawing settings..
-uchar      DRAW_GRID_LINES        = 0;    // the representation of the grid
-uchar      DRAW_SIM_REAL_MAP      = 0;    // the objects populated on the WORLD/(real) map..
+uchar      DRAW_GRID_LINES        = 1;    // the representation of the grid
+uchar      DRAW_SIM_REAL_MAP      = 1;    // the objects populated on the WORLD/(real) map..
 uchar      DRAW_IGV_EXPLORED_MAP  = 1;    // the explored territory
 uchar      DRAW_IGV_PATH          = 0;    // path to travel
 uchar      DRAW_IGV_PATH_HISTORY  = 0;
@@ -82,8 +82,8 @@ float pixToYCoord = graphYRange/window.height;
 
 /* --------------- GRID PROPERTIES --------------- */
 // GRID width & height of entire window..
-const  int grid_blocks_x   = 80; // of the width of the screen
-const  int grid_blocks_y   = 80;
+const  int grid_blocks_x   = 50; // of the width of the screen
+const  int grid_blocks_y   = 50;
 
 
 const  float pix_per_grid_block_x = (window.width * 1.0) / (grid_blocks_x);        
@@ -94,6 +94,8 @@ float incr_next_col = graphXMax / (grid_blocks_x/2);    // increment val
 float incr_next_row = graphYMax / (grid_blocks_y/2);
 
 // ================== END GLOBALS ================== //
+
+float theta[] = {0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0, 360.0};
 
 
 
@@ -126,13 +128,16 @@ vector <vertex> targetPoint;
 
 //objects that are collidable..
 vector <WorldObject*> collidable_vector;
+WorldObject* MouseSelectedObject;           //with the mouse selects the object in the world 
 
 /* THE GRID */
 GridSquare*  TheGrid[grid_blocks_x][grid_blocks_y];
 
+
 // --------------------------------//
 // ------   IGV  SETTINGS   ------ //
-IGV_Bot      IGV;   //see IGV_Bot.h
+IGV_Bot* IGV; //= new IGV_Bot();   //see IGV_Bot.h
+
 // ------ SIMULATOR  SETTINGS ------ //
 bool    going (false);
 int     generation  = 0;
@@ -162,10 +167,10 @@ void update ()
 
 
         /* NEAR OR COLLISION */
-        int min_grid_x = grid_X((IGV.x - IGV.searchRadius));
-        int max_grid_x = grid_X((IGV.x + IGV.searchRadius));
-        int min_grid_y = grid_Y((IGV.y - IGV.searchRadius));
-        int max_grid_y = grid_Y((IGV.y + IGV.searchRadius));
+        int min_grid_x = grid_X((IGV->x - IGV->searchRadius));
+        int max_grid_x = grid_X((IGV->x + IGV->searchRadius));
+        int min_grid_y = grid_Y((IGV->y - IGV->searchRadius));
+        int max_grid_y = grid_Y((IGV->y + IGV->searchRadius));
 
         glColor3f (1, 0.2, 0.4);
 
@@ -180,14 +185,14 @@ void update ()
             max_grid_y = grid_blocks_y-1;
 
 
-        cout << "igv: " << grid_X(IGV.x) << "," << grid_Y(IGV.y) << endl;
+        cout << "igv: " << grid_X(IGV->x) << "," << grid_Y(IGV->y) << endl;
         cout << 
         "min_x: "  <<  min_grid_x << ".. " <<
         "max_x: "  <<  max_grid_x << ".." << endl << 
         "min_y: "  <<  min_grid_y << ".. " <<
         "max_y: "  <<  max_grid_y << ".. " << endl << endl;
-         
 
+        
         // for all search spaces near the IGV .. if there is an object.. -> make it glow :)
         for(int grid_iter_y = min_grid_y; grid_iter_y <= max_grid_y; ++grid_iter_y){
             for(int grid_iter_x = min_grid_x; grid_iter_x <= max_grid_x; ++grid_iter_x){ 
@@ -195,12 +200,12 @@ void update ()
                     if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
                         // do you have an object??
                         // if so then  do some stuff with the object..
-                        cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
-                           << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
+                         cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
+                            << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
                         TheGrid[grid_iter_x][grid_iter_y]->glow();
                     }
             }
-        }
+        } 
 
 }
 
@@ -238,6 +243,9 @@ static void key(unsigned char key, int x, int y)
             fillGrid();
         break;
 
+        case '~':
+            cout << "Cycling through Controllable Objects" << endl;
+        break;
         case '!':
             DRAW_GRID_LINES ^= 1;
         break;
@@ -270,7 +278,8 @@ static void key(unsigned char key, int x, int y)
 static void motion (int x, int y)
 {
     if(cur_mouseclick_buttonpressed == GLUT_LEFT_BUTTON){
-            IGV.moveTo(x, y);
+            MouseSelectedObject.moveTo(x,y);
+            //IGV->moveTo(x, y);
     } else if(cur_mouseclick_buttonpressed == GLUT_RIGHT_BUTTON){
         addCollidableToGrid(x, y);
     }
@@ -285,8 +294,9 @@ static void mouse (int button, int state, int x, int y)
         switch (button){
             case GLUT_LEFT_BUTTON:
                 cur_mouseclick_buttonpressed = GLUT_LEFT_BUTTON;
-
-                IGV.moveTo(x, y);
+                // set MouseSelectedObject to the selected object..
+                // 
+                IGV->moveTo(x, y);
 
                 // cout << "mouse clicked at " << x << " " << y << endl;
                 // cout << "new point at " << newpoint.x << " " << newpoint.y << endl;
@@ -298,6 +308,7 @@ static void mouse (int button, int state, int x, int y)
             break;
         }
     } else if(state == GLUT_UP){ // GLUT_UP
+        // clear MouseSelectedObject to NULL;
         cur_mouseclick_buttonpressed = -1;
     }
 }
@@ -379,7 +390,7 @@ static void display(void)
     // SHOW THE MAP THAT THE IGV KNOWS ABOUT...
     if(DRAW_IGV_EXPLORED_MAP){
         // then draw the IGV's map..
-        // IGV.displayMap();
+        // IGV->displayMap();
     }
 
 
@@ -400,10 +411,10 @@ static void display(void)
     glColor3f (1, 1, 0);
     glPointSize (6.0);
     glBegin (GL_POLYGON);
-        glVertex2f (IGV.draw_coord_x, IGV.draw_coord_y + IGV.height_coord);
-        glVertex2f (IGV.draw_coord_x, IGV.draw_coord_y);
-        glVertex2f (IGV.draw_coord_x + IGV.width_coord, IGV.draw_coord_y);
-        glVertex2f (IGV.draw_coord_x + IGV.width_coord, IGV.draw_coord_y + IGV.height_coord);
+        glVertex2f (IGV->draw_coord_x, IGV->draw_coord_y + IGV->height_coord);
+        glVertex2f (IGV->draw_coord_x, IGV->draw_coord_y);
+        glVertex2f (IGV->draw_coord_x + IGV->width_coord, IGV->draw_coord_y);
+        glVertex2f (IGV->draw_coord_x + IGV->width_coord, IGV->draw_coord_y + IGV->height_coord);
     glEnd();
 
     // // best curves
@@ -501,8 +512,16 @@ void clearTheGrid(){
 }
 
 bool initialize ()
-{
+{   
+    MouseSelectedObject = NULL; //pls dont call delete on this..
+    if(IGV)
+        delete IGV;
+    IGV = new IGV_Bot(200, 70);
+
     clearTheGrid();
+    targetPoint.clear();
+    collidable_vector.clear();
+
     return true;
 }
 

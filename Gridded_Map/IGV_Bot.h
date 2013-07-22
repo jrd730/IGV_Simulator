@@ -2,6 +2,9 @@
 #define   IGV_BOT_H
 
 #include "WorldObject.h"
+#include "WayPoints.h"
+
+
 
 class IGV_Bot : public WorldObject
 {
@@ -37,6 +40,9 @@ class IGV_Bot : public WorldObject
            // graph coordinates
         float draw_coord_x;
         float draw_coord_y;
+
+        //std::vector <WayPoint*> WayPoints;     // contains an ordered list of waypoints
+        WayPoints waypoints;  // the waypoints object.. handles waypoint stuff..
 
     private:
         void init();

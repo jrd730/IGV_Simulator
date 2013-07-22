@@ -8,7 +8,7 @@ WorldObject::WorldObject(int _x, int _y, unsigned char _type){
     x = _x;   y = _y;   type = _type;   
 
     //graph coords
-    coord_x =  grid_X(x) *pix_per_grid_block_x*pixToXCoord + graphXMin;
+    coord_x =  grid_X(x) *pix_per_grid_block_x*pixToXCoord + graphXMin;         //exact coord , instead of fuzzy.. (leave alone)
     coord_y = -1*((grid_Y(y)+1) * pix_per_grid_block_y*pixToYCoord) + graphYMax; 
 
    	//coord_x = toX_Coord(_x); //precise (without offset..)
@@ -17,4 +17,7 @@ WorldObject::WorldObject(int _x, int _y, unsigned char _type){
     // shape
     width = pix_per_grid_block_x*pixToXCoord;
     height = pix_per_grid_block_y*pixToYCoord;
+
+    width_coord  = toX_Coord(width);
+    height_coord = toY_Coord(height);
 }

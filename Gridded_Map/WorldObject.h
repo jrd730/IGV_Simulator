@@ -1,7 +1,11 @@
 #ifndef WORLD_OBJECT
 #define WORLD_OBJECT
 #include <stdlib.h>
+#include <algorithm>
+#include <vector>
+#include <queue>
 #include "Globals.h"
+
 /* Any object ever.. */
 class WorldObject{
 public:
@@ -23,6 +27,9 @@ public:
      // shape variables.. describe the shape..
     float width;
     float height;
+
+    float width_coord;
+    float height_coord;
 
 };
 

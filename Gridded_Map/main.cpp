@@ -60,6 +60,9 @@ uchar      DRAW_IGV_EXPLORED_MAP  = 1;    // the explored territory
 uchar      DRAW_IGV_PATH          = 0;    // path to travel
 uchar      DRAW_IGV_PATH_HISTORY  = 0;
 
+uchar      STATE_ADD_WAYPOINT     = 1;
+uchar      STATE_ADD_OBSTACLE     = 0;
+
 /*      GLOBALS 
 */
 /* --------------- WINDOW & GRID PROPERTIES --------------- */
@@ -82,8 +85,8 @@ float pixToYCoord = graphYRange/window.height;
 
 /* --------------- GRID PROPERTIES --------------- */
 // GRID width & height of entire window..
-const  int grid_blocks_x   = 50; // of the width of the screen
-const  int grid_blocks_y   = 50;
+const  int grid_blocks_x   = 24; // of the width of the screen
+const  int grid_blocks_y   = 24;
 
 
 const  float pix_per_grid_block_x = (window.width * 1.0) / (grid_blocks_x);        
@@ -128,6 +131,8 @@ vector <vertex> targetPoint;
 
 //objects that are collidable..
 vector <WorldObject*> collidable_vector;
+
+
 WorldObject* MouseSelectedObject;           //with the mouse selects the object in the world 
 
 /* THE GRID */
@@ -229,12 +234,6 @@ static void key(unsigned char key, int x, int y)
 
         case 'c':
         case 'C':
-            targetPoint.clear();
-            collidable_vector.clear();
-            clearTheGrid();
-            generation = 0;
-        break;
-
         case 'r':
         case 'R':
             initialize();
@@ -243,8 +242,14 @@ static void key(unsigned char key, int x, int y)
             fillGrid();
         break;
 
-        case '~':
-            cout << "Cycling through Controllable Objects" << endl;
+        case '~': {
+            STATE_ADD_WAYPOINT ^= 1; 
+            STATE_ADD_OBSTACLE = STATE_ADD_WAYPOINT ^ 1;
+            if(STATE_ADD_WAYPOINT & 1)
+                cout << "STATE: Add Waypoints..." << endl;
+            else
+                cout << "STATE: Add Obstacles..." << endl;
+        }
         break;
         case '!':
             DRAW_GRID_LINES ^= 1;
@@ -281,7 +286,9 @@ static void motion (int x, int y)
             //MouseSelectedObject.moveTo(x,y);
             IGV->moveTo(x, y);
     } else if(cur_mouseclick_buttonpressed == GLUT_RIGHT_BUTTON){
-        addCollidableToGrid(x, y);
+        if(STATE_ADD_OBSTACLE){
+            addCollidableToGrid(x, y);
+        }
     }
     // cout << "mouse clicked at " << x << " " << y << endl;
     // cout << "new point at " << newpoint.x << " " << newpoint.y << endl;
@@ -296,14 +303,23 @@ static void mouse (int button, int state, int x, int y)
                 cur_mouseclick_buttonpressed = GLUT_LEFT_BUTTON;
                 // set MouseSelectedObject to the selected object..
                 // 
-                IGV->moveTo(x, y);
+                //if the current select grid square contains teh IGV,
+                // tehn select the IGV..
+                if ( TheGrid[grid_X(x)][grid_Y(y)]->containsIGV() ){
+                    IGV->moveTo(x, y);
+                } else {
 
+                }
                 // cout << "mouse clicked at " << x << " " << y << endl;
                 // cout << "new point at " << newpoint.x << " " << newpoint.y << endl;
             break;
             case GLUT_RIGHT_BUTTON:
                 cur_mouseclick_buttonpressed = GLUT_RIGHT_BUTTON;
-                addCollidableToGrid(x, y);
+                if(STATE_ADD_OBSTACLE){
+                    addCollidableToGrid(x, y);
+                } else if(STATE_ADD_WAYPOINT){
+                    IGV->waypoints.newWaypoint(x, y);
+                }
 
             break;
         }
@@ -325,8 +341,6 @@ static void idle(void)
 static void display(void)
 {
     glClear (GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-
 
 
     if(DRAW_GRID_LINES == true){
@@ -359,14 +373,41 @@ static void display(void)
 
     /* Objects on the Real Map */
 
-    // red square
-    glColor3f (1, 0, 0);
-    glBegin (GL_QUADS);
-        glVertex2f (0.5 , 0.5 );
-        glVertex2f (1.5 , 0.5 );
-        glVertex2f (1.5 , 1.5 );
-        glVertex2f (0.5 , 1.5 );
-    glEnd();
+    // draw red square target
+    //drawTarget();
+
+    //void drawTarget(){
+    if(IGV->waypoints.size()){
+        // draw the next waypoint.. 
+        WayPoint* wp = IGV->waypoints.next();
+        cout << wp->coord_x << " " << wp->coord_y << endl;
+        glColor3f (1, 0, 0);
+        glBegin (GL_QUADS);
+            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+        glEnd();  
+
+        std::queue <WayPoint*> wp_queue = IGV->waypoints.getWaypoint_Q();
+        wp_queue.pop();
+        int wp_length = wp_queue.size();
+
+        glColor3f (0.5, 0.2, 0.9);
+        glBegin (GL_QUADS);
+        for(int iter = 0; iter < wp_length; iter++){
+            wp = wp_queue.front();
+            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+            wp_queue.pop();
+        }
+        glEnd(); 
+    }  
+
+        
+    //}
 
     //target points
     glColor3f (0, 0, 1);
@@ -521,6 +562,8 @@ bool initialize ()
     clearTheGrid();
     targetPoint.clear();
     collidable_vector.clear();
+    IGV->waypoints.clear();
+    generation = 0;
 
     return true;
 }

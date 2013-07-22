@@ -1,6 +1,7 @@
 
 #include "IGV_Bot.h"
 
+
 /* default */
 IGV_Bot::IGV_Bot() : WorldObject(50, 50) 
 { 
@@ -53,6 +54,8 @@ void IGV_Bot::moveTo(int _x, int _y){
 	draw_coord_x = coord_x - (width_coord/2);
 	draw_coord_y = coord_y - (height_coord/2);
 }
+
+
 
 
 void IGV_Bot::glow(){ 

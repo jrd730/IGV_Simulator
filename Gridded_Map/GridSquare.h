@@ -9,7 +9,7 @@
 class GridSquare {
     public:
         GridSquare(WorldObject* obj_to_set = NULL);
-        GridSquare(int _x, int _y, WorldObject* obj_to_set = NULL);
+        GridSquare(int _x, int _y, WorldObject* obj_to_set = NULL);   //converts the position from 
         ~GridSquare();
 
         void glow(){ 
@@ -20,18 +20,22 @@ class GridSquare {
                 perform_glow_effect_grid(coord_x, coord_y, width, height); 
             }
         }
+        bool containsIGV(){ return thisContainsIGV; }
 
         bool is_object;
         WorldObject* object;    // objects that are contained in this grid square.. 
 
-        int x;   //pixels
-        int y;
+        
+        int grid_x;
+        int grid_y;
 
-        // in graph coordinates...
         float coord_x;
         float coord_y;
+
         float width;
         float height;
+
+        bool  thisContainsIGV;
 };
 
 #endif

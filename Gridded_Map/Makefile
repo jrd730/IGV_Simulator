@@ -12,7 +12,7 @@ CPPFLAGS = -g -Wall -pedantic
 LIBDIRS  = -L/usr/X11R6/lib  
 LIBS = -lX11 -lglut -lGL -lGLU -lm -lfl
 
-SRC = IGV_Bot.cpp GridSquare.cpp CollidableObject.cpp WorldObject.cpp WayPoint.cpp  main.cpp
+SRC =  WorldObject.cpp WayPoints.cpp IGV_Bot.cpp GridSquare.cpp CollidableObject.cpp    main.cpp
 OBJ = $(SRC:.cpp=.o)
 # older versions of linux might also need -lXi and -lXmu 
 

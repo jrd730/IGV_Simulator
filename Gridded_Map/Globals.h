@@ -64,3 +64,8 @@ extern void perform_glow_effect_grid(float coord_x, float coord_y, float bwidth,
 #define pixFromCoordX(x)  (((x) - graphXMin) / pixToXCoord)
 #define pixFromCoordY(y) (-1 * ((y) - graphYMax) / pixToYCoord)
 
+/* convert/find grid coordinate to graph coordinate */
+#define toX_Coord_From_GridCoord(x) ((pix_per_grid_block_x * (x)) + graphXMin)
+#define toY_Coord_From_GridCoord(y) (-1 * (pix_per_grid_block_y * (y)) + graphYMax)
+
+

@@ -26,7 +26,7 @@ Mouse
 Keys
 ----
 
-- 'c'  Clear Simulation Data (Resets the Simulation)
+- 'c'  Create randomized obstacles
 - 'g'  Start Simulation
 - 'r'  Remove Obstacles
 - 'f'  Fill Grid With Obstacles..

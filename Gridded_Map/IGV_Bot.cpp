@@ -32,8 +32,36 @@ void IGV_Bot::init(){
 	draw_coord_x = coord_x - (width_coord/2);  //current coord but offset left and down..  
 	draw_coord_y = coord_y - (height_coord/2); // by the Width & height
 
+	//initialize the map
+	Map = NULL;
+	initMap();
 }
 
+bool IGV_Bot::initMap(){
+	if(Map)		// if the Map DOES exist.. then it doesnt need to be reinit... just clean it..
+		return false;
+
+	Map = new GridSquare**[grid_blocks_x];
+	for (int i = 0; i < grid_blocks_x; ++i){
+    	Map[i] = new GridSquare*[grid_blocks_y];
+        for (int j = 0; j < grid_blocks_y; ++j){
+            Map[i][j] = new GridSquare(i, j, NULL);
+        }
+    }
+    return true;
+}
+
+bool IGV_Bot::cleanMap(){
+	if(!Map)		// if it DOESNT exist.. then return false.. need to init first..
+		return false;
+
+	for (int i = 0; i < grid_blocks_x; ++i)
+        for (int j = 0; j < grid_blocks_y; ++j){
+            delete Map[i][j];
+            Map[i][j] = new GridSquare(i, j, NULL);
+         }
+    return true;
+}
 
 void IGV_Bot::moveTo(int _x, int _y){
 	if (_x > window.width)

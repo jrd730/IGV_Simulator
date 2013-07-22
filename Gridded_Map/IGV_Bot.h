@@ -2,6 +2,7 @@
 #define   IGV_BOT_H
 
 #include "WorldObject.h"
+#include "GridSquare.h"
 #include "WayPoints.h"
 
 
@@ -44,8 +45,12 @@ class IGV_Bot : public WorldObject
         //std::vector <WayPoint*> WayPoints;     // contains an ordered list of waypoints
         WayPoints waypoints;  // the waypoints object.. handles waypoint stuff..
 
+        GridSquare* **Map; //.. 2d map of points to grid squares...
+
     private:
         void init();
+        bool initMap();
+        bool cleanMap();
 
 };
 

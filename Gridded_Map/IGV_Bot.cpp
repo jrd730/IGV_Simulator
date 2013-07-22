@@ -16,6 +16,62 @@ IGV_Bot::IGV_Bot(int _x, int _y, unsigned char _type) : WorldObject(_x, _y, _typ
 }
 
 
+
+bool IGV_Bot::addObjectToMap(WorldObject* worldobj){
+	bool object_insert_successful  = true;
+
+	(Map[grid_X(worldobj->x)][grid_Y(worldobj->y)])
+		->setObject(worldobj);
+
+	collidable_vector.push_back(worldobj);
+
+	return object_insert_successful;
+}
+
+ bool IGV_Bot::objectAt(int grid_x, int grid_y){
+ 	if(Map[grid_x][grid_y]->is_object)
+ 		return true;
+ 	return false;
+ }
+
+void IGV_Bot::displayMap(){
+	//draw_the_IGV_Map((void***)Map)''
+    for (unsigned int i = 0; i < collidable_vector.size(); ++i){
+        collidable_vector[i]->glow();
+    }
+
+}
+
+void IGV_Bot::moveTo(int _x, int _y){
+	if (_x > window.width)
+		_x = window.width;
+	if (_x < 0)
+		_x = 0;
+	if (_y > window.height)
+		_y = window.height;
+	if (_y < 0)
+		_y = 0;
+
+	x = _x;
+	y = _y;
+
+	coord_x = toX_Coord(_x);
+	coord_y = toY_Coord(_y);
+
+	draw_coord_x = coord_x - (width_coord/2);
+	draw_coord_y = coord_y - (height_coord/2);
+}
+
+
+
+
+void IGV_Bot::glow(){ 
+    perform_glow_effect_grid(coord_x, coord_y, width, height); 
+}
+
+
+
+
 void IGV_Bot::init(){ 
 
 	searchRadius = 72; //px
@@ -62,31 +118,3 @@ bool IGV_Bot::cleanMap(){
          }
     return true;
 }
-
-void IGV_Bot::moveTo(int _x, int _y){
-	if (_x > window.width)
-		_x = window.width;
-	if (_x < 0)
-		_x = 0;
-	if (_y > window.height)
-		_y = window.height;
-	if (_y < 0)
-		_y = 0;
-
-	x = _x;
-	y = _y;
-
-	coord_x = toX_Coord(_x);
-	coord_y = toY_Coord(_y);
-
-	draw_coord_x = coord_x - (width_coord/2);
-	draw_coord_y = coord_y - (height_coord/2);
-}
-
-
-
-
-void IGV_Bot::glow(){ 
-    perform_glow_effect_grid(coord_x, coord_y, width, height); 
-}
-

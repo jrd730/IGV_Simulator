@@ -211,6 +211,14 @@ void update ()
                      cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
                         << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
                     TheGrid[grid_iter_x][grid_iter_y]->glow();
+                    // discover object.. discover type.. now insert into the igv map..
+
+                    // ASSERT: the x and y are within the window.. at this point obejcts from the world are
+                    //  guarenteed to fit within the igv's world..(although it may seem contrary)
+                    if(!IGV->objectAt(grid_iter_x, grid_iter_y)){
+                        WorldObject* wobj = TheGrid[grid_iter_x][grid_iter_y]->object;
+                        IGV->addObjectToMap(new CollidableObject(wobj->x, wobj->y));
+                    }
                 }
         }
     } 
@@ -281,9 +289,7 @@ static void key(unsigned char key, int x, int y)
         break;
         case '@':
             DRAW_SIM_REAL_MAP ^= 1;
-        break;
-        case '#':
-            DRAW_IGV_EXPLORED_MAP ^= 1;
+            DRAW_IGV_EXPLORED_MAP = DRAW_SIM_REAL_MAP ^ 1;
         break;
 
         case '+':
@@ -456,7 +462,8 @@ static void display(void)
     // SHOW THE MAP THAT THE IGV KNOWS ABOUT...
     if(DRAW_IGV_EXPLORED_MAP){
         // then draw the IGV's map..
-        // IGV->displayMap();
+            glColor3f (0.1, 0.4, 0.5);
+         IGV->displayMap();
     }
 
 
@@ -510,6 +517,8 @@ void perform_glow_effect_grid(float coord_x, float coord_y, float bwidth, float 
 
     // glFlush();
 }
+
+
 
 static void resize(int w, int h)
 {

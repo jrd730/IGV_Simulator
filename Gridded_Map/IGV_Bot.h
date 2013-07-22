@@ -13,6 +13,9 @@ class IGV_Bot : public WorldObject
         IGV_Bot();
         IGV_Bot(int _x, int _y, unsigned char _type = -1);
 
+        bool addObjectToMap(WorldObject* worldobj);
+        bool objectAt(int grid_x, int grid_y);
+        void displayMap();
         void moveTo(int _x, int _y);
         void glow();
 
@@ -46,6 +49,7 @@ class IGV_Bot : public WorldObject
         WayPoints waypoints;  // the waypoints object.. handles waypoint stuff..
 
         GridSquare* **Map; //.. 2d map of points to grid squares...
+        std::vector <WorldObject*> collidable_vector;
 
     private:
         void init();

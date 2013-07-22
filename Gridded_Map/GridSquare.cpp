@@ -4,9 +4,8 @@
 
 
 GridSquare::GridSquare(WorldObject* obj_to_set){
-	is_object = false;
-	thisContainsIGV = false;
-	object = obj_to_set;
+	object = NULL;
+	setObject(obj_to_set);
 }
 
 GridSquare::GridSquare(int _grid_x, int _grix_y, WorldObject* obj_to_set)
@@ -20,7 +19,22 @@ GridSquare::GridSquare(int _grid_x, int _grix_y, WorldObject* obj_to_set)
 	width = pix_per_grid_block_x*pixToXCoord;
 	height = pix_per_grid_block_y*pixToYCoord;
 
+	object = NULL;
+	setObject(obj_to_set);
+}
+
+void GridSquare::setObject(WorldObject* obj_to_set){
+	//perform check to see if there is room in thiscell for multiple objects..
+	if(object){
+		delete object;
+		object = NULL;
+	}
+
 	is_object = false;
+	if(obj_to_set){
+		is_object = true;
+	}
+
 	thisContainsIGV = false;
 	object = obj_to_set;
 }

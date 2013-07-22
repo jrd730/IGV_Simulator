@@ -12,6 +12,8 @@ class GridSquare {
         GridSquare(int _x, int _y, WorldObject* obj_to_set = NULL);   //converts the position from 
         ~GridSquare();
 
+        void setObject(WorldObject* obj_to_set);
+
         void glow(){ 
             if(object){
                 object->glow();

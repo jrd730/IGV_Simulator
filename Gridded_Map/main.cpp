@@ -178,6 +178,21 @@ long double randomFloat (){
 void update ()
 {
 
+    // IGV->checkForObstacles() .. 
+    // IGV->storeObstaclesFound()... if not already stored
+    // Given obstacles and the Path structure, determine if
+    //  path should be updated.
+    //  if new obstacle added:
+    //      IGV->Path.updatePath();     // redetermine Path, given current location and current Path Space State..
+                                            // Path Space state... the state of the space of possible paths..
+                                                // this is grown as space and obstcacles are found
+                                                // in a dynamic environment they es would update remotely or remain
+                                                    // as ancient data..
+
+    // if this current space leads to a worse outome ( by some worseness weight measure..) 
+    // than traveling back to the previous good path..
+    //   then turn around and go back to the previous path (back track)
+    // IGV->moveTo() // .. next location
 
 
     /* NEAR OR COLLISION */

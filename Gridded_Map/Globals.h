@@ -52,6 +52,9 @@ extern void perform_glow_effect_grid(float coord_x, float coord_y, float bwidth,
 
 #endif
 
+
+
+
 /* Finds the indecies in the grid at pixel x and pixel y..*/
 #define grid_X(x) (int)((x) / pix_per_grid_block_x) 
 #define grid_Y(y) (int)((y) / pix_per_grid_block_y)

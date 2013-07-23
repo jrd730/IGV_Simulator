@@ -85,10 +85,12 @@ float graphYMax = 9;
 float graphYRange = graphYMax - graphYMin;
 float pixToYCoord = graphYRange/window.height;
 
+
+
 /* --------------- GRID PROPERTIES --------------- */
 // GRID width & height of entire window..
-const  int grid_blocks_x   = 24; // of the width of the screen
-const  int grid_blocks_y   = 24;
+const  int grid_blocks_x   = 50; // of the width of the screen
+const  int grid_blocks_y   = 50;
 
 
 const  float pix_per_grid_block_x = (window.width * 1.0) / (grid_blocks_x);        
@@ -100,8 +102,12 @@ float incr_next_row = graphYMax / (grid_blocks_y/2);
 
 // ================== END GLOBALS ================== //
 
+
+// drawing and mvoement stuff..
 float theta[] = {0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0, 360.0};
 
+float fractionalDistance_x = 0;
+float fractionalDistance_y = 0;
 
 
 /* = = = = = = = = = = = = =
@@ -228,6 +234,7 @@ void update ()
     // given waypoints.. move to waypoints..
 
     WayPoint* wp = IGV->waypoints.next();
+    float MOVE_CONSTANT = 5.0;
 
     float dx;
     float dy;
@@ -239,8 +246,17 @@ void update ()
         if (distance_to_travel < GPS_WAYPOINT_RADIUS) {
             IGV->waypoints.pop();
         } else {  // figure out how much to move to get there..
-            IGV->moveTo( 5*(dx/distance_to_travel) + IGV->x,
-                         5*(dy/distance_to_travel) + IGV->y);
+            dx = MOVE_CONSTANT*(dx/distance_to_travel);     //how much do we need to travel
+            dy = MOVE_CONSTANT*(dy/distance_to_travel);
+
+            fractionalDistance_x += dx - floor(dx);          // how much distance is fractional and saved for next time
+            fractionalDistance_y += dy - floor(dy);
+
+            IGV->moveTo( fractionalDistance_x + floor(dx) + IGV->x,     // move to the whole numbered pixel coordinate
+                         fractionalDistance_y + floor(dy) + IGV->y);
+
+            fractionalDistance_x -= floor(fractionalDistance_x);
+            fractionalDistance_y -= floor(fractionalDistance_y);
         }   
     }
 
@@ -266,11 +282,16 @@ static void key(unsigned char key, int x, int y)
          break;
 
         case 'c':
-        case 'C':
+        case 'C':{
             // randomly generate obstacles
             for (int i=0; i < 50; ++i){
-                addCollidableToGrid( rand()%window.width, rand()%window.height);
+                if(STATE_ADD_WAYPOINT & 1)
+                    IGV->waypoints.newWaypoint(rand()%window.width, rand()%window.height);
+                else 
+                    addCollidableToGrid( rand()%window.width, rand()%window.height);
+
             }
+        }
 
         break;
         

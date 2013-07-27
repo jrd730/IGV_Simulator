@@ -63,7 +63,6 @@ uchar      DRAW_IGV_PATH_HISTORY  = 0;
 uchar      STATE_ADD_WAYPOINT     = 1;
 uchar      STATE_ADD_OBSTACLE     = 0;
 
-#define    GPS_WAYPOINT_RADIUS  5  // 5 pixels in the simulator..
 
 /*      GLOBALS 
 */
@@ -106,8 +105,7 @@ float incr_next_row = graphYMax / (grid_blocks_y/2);
 // drawing and mvoement stuff..
 float theta[] = {0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0, 360.0};
 
-float fractionalDistance_x = 0;
-float fractionalDistance_y = 0;
+
 
 
 /* = = = = = = = = = = = = =
@@ -144,7 +142,7 @@ vector <WorldObject*> collidable_vector;
 WorldObject* MouseSelectedObject;           //with the mouse selects the object in the world 
 
 /* THE GRID */
-GridSquare*  TheGrid[grid_blocks_x][grid_blocks_y];
+GridSquare*  **TheGrid;  // must be initialized
 
 
 // --------------------------------//
@@ -194,86 +192,12 @@ void update ()
     //   then turn around and go back to the previous path (back track)
     // IGV->moveTo() // .. next location
 
-
-    /* NEAR OR COLLISION */
-    int min_grid_x = grid_X((IGV->x - IGV->searchRadius));
-    int max_grid_x = grid_X((IGV->x + IGV->searchRadius));
-    int min_grid_y = grid_Y((IGV->y - IGV->searchRadius));
-    int max_grid_y = grid_Y((IGV->y + IGV->searchRadius));
-
-    glColor3f (1, 0.2, 0.4);
-
-    // check window bounds..
-    if(min_grid_x < 0)
-        min_grid_x = 0;
-    if(min_grid_y < 0)
-        min_grid_y = 0;
-    if(max_grid_x >= grid_blocks_x)
-        max_grid_x = grid_blocks_x-1;
-    if(max_grid_y >= grid_blocks_y)
-        max_grid_y = grid_blocks_y-1;
-
-
-    cout << "igv: " << grid_X(IGV->x) << "," << grid_Y(IGV->y) << endl;
-    cout << 
-    "min_x: "  <<  min_grid_x << ".. " <<
-    "max_x: "  <<  max_grid_x << ".." << endl << 
-    "min_y: "  <<  min_grid_y << ".. " <<
-    "max_y: "  <<  max_grid_y << ".. " << endl << endl;
-
+    glColor3f (1, 0.2, 0.4);                    // set "glowing" color for obstacle found..
+   
+    IGV->runSearchWithinRadius(TheGrid);        // searching the 2d space for collidable objects..
+    IGV->moveToNextWaypoint();
     
-    // for all search spaces near the IGV .. if there is an object.. -> make it glow :)
-    for(int grid_iter_y = min_grid_y; grid_iter_y <= max_grid_y; ++grid_iter_y){
-        for(int grid_iter_x = min_grid_x; grid_iter_x <= max_grid_x; ++grid_iter_x){ 
-                // cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << endl;
-                if (TheGrid[grid_iter_x][grid_iter_y]->is_object){  
-                    // do you have an object??
-                    // if so then  do some stuff with the object..
-                     cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
-                        << TheGrid[grid_iter_x][grid_iter_y]->object->type << endl;
-                    TheGrid[grid_iter_x][grid_iter_y]->glow();
-                    // discover object.. discover type.. now insert into the igv map..
-
-                    // ASSERT: the x and y are within the window.. at this point obejcts from the world are
-                    //  guarenteed to fit within the igv's world..(although it may seem contrary)
-                    if(!IGV->objectAt(grid_iter_x, grid_iter_y)){
-                        WorldObject* wobj = TheGrid[grid_iter_x][grid_iter_y]->object;
-                        IGV->addObjectToMap(new CollidableObject(wobj->x, wobj->y));
-                    }
-                }
-        }
-    } 
-
-    
-    /* UPDATE CURRENT POSITION by  moving a specified increment distance */
-    // given waypoints.. move to waypoints..
-
-    WayPoint* wp = IGV->waypoints.next();
-    float MOVE_CONSTANT = 5.0;
-
-    float dx;
-    float dy;
-    float distance_to_travel;
-    if(wp != NULL){
-        dx = (wp->x - IGV->x);
-        dy = (wp->y - IGV->y);
-        distance_to_travel = sqrt(dx * dx + dy * dy);
-        if (distance_to_travel < GPS_WAYPOINT_RADIUS) {
-            IGV->waypoints.pop();
-        } else {  // figure out how much to move to get there..
-            dx = MOVE_CONSTANT*(dx/distance_to_travel);     //how much do we need to travel
-            dy = MOVE_CONSTANT*(dy/distance_to_travel);
-
-            fractionalDistance_x += dx - floor(dx);          // how much distance is fractional and saved for next time
-            fractionalDistance_y += dy - floor(dy);
-
-            IGV->moveTo( fractionalDistance_x + floor(dx) + IGV->x,     // move to the whole numbered pixel coordinate
-                         fractionalDistance_y + floor(dy) + IGV->y);
-
-            fractionalDistance_x -= floor(fractionalDistance_x);
-            fractionalDistance_y -= floor(fractionalDistance_y);
-        }   
-    }
+   
 
 
 }
@@ -505,8 +429,8 @@ static void display(void)
     // SHOW THE MAP THAT THE IGV KNOWS ABOUT...
     if(DRAW_IGV_EXPLORED_MAP){
         // then draw the IGV's map..
-            glColor3f (0.1, 0.4, 0.5);
-         IGV->displayMap();
+         glColor3f (0.1, 0.4, 0.5);
+         IGV->displayMap();         // (currently the IGV tells the elements in the map to glow.. )
     }
 
 
@@ -645,6 +569,19 @@ bool initialize ()
     return true;
 }
 
+bool initGrid(int grid_width, int grid_height){
+    TheGrid = new GridSquare**[grid_width];
+    for (int i = 0; i < grid_width; ++i){
+        TheGrid[i] = new GridSquare*[grid_height];
+            for (int j = 0; j < grid_height; ++j)
+            {
+                TheGrid[i][j] = NULL;
+            }
+    }
+
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
     srand (time (0));
@@ -661,7 +598,10 @@ int main(int argc, char *argv[])
         cout << "\nError: input file not found\n";
     }
 
-    cout << "Initializing Grid...";
+    cout << "Initializing Grid..." ;
+    cout << "complete!\n" ;
+    initGrid(grid_blocks_x, grid_blocks_y);
+    cout << "Initializing Simulator...";
     initialize ();
     cout << "complete!\n\n" ;
 

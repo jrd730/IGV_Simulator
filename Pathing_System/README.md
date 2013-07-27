@@ -1,7 +1,7 @@
-Grids
+IGV Pathing
 =======
 
-Simple gridding system that takes into account pixel coordinates & graph coordinates & grid indecies.
+Simple Pathing that overlays the Simple Grid System..
 
 ####TODO:		
 >fix the coordinate system.. haha
@@ -14,7 +14,7 @@ Usage
 -----
 
 $ make  
-$ grids <optional input file>  
+$ igv_sim
 
 Click anywhere in the window to add new points.
 

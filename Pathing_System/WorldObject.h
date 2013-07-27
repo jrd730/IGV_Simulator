@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <queue>
+#include <cmath>
 #include "Globals.h"
 
 /* Any object ever.. */

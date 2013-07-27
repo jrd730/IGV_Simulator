@@ -1,6 +1,8 @@
 #ifndef   IGV_BOT_H
 #define   IGV_BOT_H
 
+#include <iostream>
+#include "CollidableObject.h"
 #include "WorldObject.h"
 #include "GridSquare.h"
 #include "WayPoints.h"
@@ -12,6 +14,10 @@ class IGV_Bot : public WorldObject
     public:
         IGV_Bot();
         IGV_Bot(int _x, int _y, unsigned char _type = -1);
+
+        /* run search on this 2d space.. */
+        bool runSearchWithinRadius(GridSquare* **GridSpace);
+        bool moveToNextWaypoint();
 
         bool addObjectToMap(WorldObject* worldobj);
         bool objectAt(int grid_x, int grid_y);
@@ -55,6 +61,10 @@ class IGV_Bot : public WorldObject
         void init();
         bool initMap();
         bool cleanMap();
+
+        int   GPS_WAYPOINT_RADIUS;
+        float fractionalDistance_x ;    // the accumulated & saved distance that hasn't been travelled 
+        float fractionalDistance_y ;    //  but should be travelled eventually.. so collect it..
 
 };
 

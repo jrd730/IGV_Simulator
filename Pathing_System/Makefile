@@ -20,7 +20,7 @@ OBJ = $(SRC:.cpp=.o)
 # LIBS = -framework GLUT -framework OpenGL -lobjc
 # OSX = -D OSX
 
-TARGET=grids
+TARGET=igv_sim
 
 $(TARGET): $(OBJ) 
 	$(CXX) $(CPPFLAGS) $(OSX) -o $(TARGET) $(OBJ) $(LIBDIRS) $(LIBS)

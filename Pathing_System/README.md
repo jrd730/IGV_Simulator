@@ -3,6 +3,11 @@ IGV Pathing
 
 Simple Pathing that overlays the Simple Grid System..
 
+
+####TODO:  	
+>Choose pathing methodology.. see issues for details
+
+
 ####TODO:		
 >fix the coordinate system.. haha
 >each grid points to a "GridSquare".. should point to our tree structure..

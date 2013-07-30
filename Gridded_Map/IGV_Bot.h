@@ -56,6 +56,14 @@ class IGV_Bot : public WorldObject
         bool initMap();
         bool cleanMap();
 
+        double wheelBase, 
+            tireDiameter,
+            angularVelocity,
+            maxAngularVelocity,
+            leftVelocity, 
+            rightVelocity,
+            rotation;
+
 };
 
 #endif

@@ -6,7 +6,7 @@
 #include "WorldObject.h"
 #include "GridSquare.h"
 #include "WayPoints.h"
-
+#include "Vertex.h"
 
 
 class IGV_Bot : public WorldObject
@@ -16,14 +16,16 @@ class IGV_Bot : public WorldObject
         IGV_Bot(int _x, int _y, unsigned char _type = -1);
 
         /* run search on this 2d space.. */
-        bool runSearchWithinRadius(GridSquare* **GridSpace);
-        bool moveToNextWaypoint();
+        bool    checkForObstacles(GridSquare* **GridSpace);
+        bool    moveToNextWaypoint();
+        bool    decideNextPathpoint();
 
         bool addObjectToMap(WorldObject* worldobj);
         bool objectAt(int grid_x, int grid_y);
         void displayMap();
         void moveTo(int _x, int _y);
         void glow();
+
 
 /*  In the base class:
         // location in pixels 

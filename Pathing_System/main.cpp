@@ -64,7 +64,7 @@ uchar      STATE_ADD_WAYPOINT     = 1;
 uchar      STATE_ADD_OBSTACLE     = 0;
 
 
-/*      GLOBALS 
+/*      GLOBALS                                             //
 */
 /* --------------- WINDOW & GRID PROPERTIES --------------- */
 // window
@@ -99,10 +99,12 @@ const  float pix_per_grid_block_y = (window.height * 1.0) / (grid_blocks_y);
 float incr_next_col = graphXMax / (grid_blocks_x/2);    // increment val
 float incr_next_row = graphYMax / (grid_blocks_y/2);
 
+//                                                   //
+//                                                   //
 // ================== END GLOBALS ================== //
 
 
-// drawing and mvoement stuff..
+// drawing and movement stuff..
 float theta[] = {0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0, 360.0};
 
 
@@ -133,7 +135,9 @@ void clearTheGrid();
 */
 // ----------------------------------   - - - - MAP OBJECTS
 //Target Points
-vector <vertex> targetPoint;
+vector <vertex> pathTaken;
+float pathTakenPointMinDistance = 0.2;
+uint   pathTakenMaxPoints = 30;
 
 //objects that are collidable..
 vector <WorldObject*> collidable_vector;
@@ -158,8 +162,7 @@ uint    cur_mouseclick_buttonpressed = -1;  // state variable
 
 
 
-void  initializeViewMatrix ()
-{
+void  initializeViewMatrix (){
     pixToXCoord = graphXRange/window.width;
     pixToYCoord = graphYRange/window.height;
 }
@@ -173,8 +176,9 @@ long double randomFloat (){
 /* Calling during idling... Animates the stuff on the screen 
     Main logic...
 */
-void update ()
-{
+void update (){
+    glColor3f (1, 0.2, 0.4);                    // set "glowing" color for obstacle found..
+    IGV->checkForObstacles(TheGrid);        // searching the 2d space for collidable objects..
 
     // IGV->checkForObstacles() .. 
     // IGV->storeObstaclesFound()... if not already stored
@@ -190,22 +194,17 @@ void update ()
     // if this current space leads to a worse outome ( by some worseness weight measure..) 
     // than traveling back to the previous good path..
     //   then turn around and go back to the previous path (back track)
-    // IGV->moveTo() // .. next location
+    // IGV->moveToNextWaypoint() // .. next location
 
-    glColor3f (1, 0.2, 0.4);                    // set "glowing" color for obstacle found..
-   
-    IGV->runSearchWithinRadius(TheGrid);        // searching the 2d space for collidable objects..
-    IGV->moveToNextWaypoint();
+
+    IGV->decideNextPathpoint();          // determines the x,y pixel coord to move towards.. and if it is needed then it is set
+    IGV->moveToNextWaypoint();           // move to the next waypoint..
     
-   
-
-
 }
 
 
 
-static void key(unsigned char key, int x, int y)
-{
+static void key(unsigned char key, int x, int y){
     //int modifier_key_combo = glutGetModifiers();
     //  << modifier_key_combo << ":"<< key << endl;
 
@@ -290,7 +289,7 @@ static void motion (int x, int y)
     }
     // cout << "mouse clicked at " << x << " " << y << endl;
     // cout << "new point at " << newpoint.x << " " << newpoint.y << endl;
-    // cout << "points: " << targetPoint.size() << endl;
+    // cout << "points: " << pointpken.size() << endl;
 }
 
 static void mouse (int button, int state, int x, int y)
@@ -358,6 +357,34 @@ static void display(void)
                glVertex2f (x, graphYMax);
            glEnd();
        }
+        if(IGV->waypoints.size()){
+            // draw the next waypoint.. 
+            WayPoint* wp = IGV->waypoints.next();
+            cout << wp->coord_x << " " << wp->coord_y << endl;
+            glColor3f (1, 0, 0);
+            glBegin (GL_QUADS);
+                glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+                glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+                glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+                glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+            glEnd();  
+
+            std::queue <WayPoint*> wp_queue = IGV->waypoints.getWaypoint_Q();
+            wp_queue.pop();
+            int wp_length = wp_queue.size();
+
+            glColor3f (0.5, 0.2, 0.9);
+            glBegin (GL_QUADS);
+            for(int iter = 0; iter < wp_length; iter++){
+                wp = wp_queue.front();
+                glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+                glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
+                glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+                glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
+                wp_queue.pop();
+            }
+            glEnd(); 
+        }  
     }
             // x/y axis
     glColor3f (1, 1, 1);
@@ -375,46 +402,12 @@ static void display(void)
     //drawTarget();
 
     //void drawTarget(){
-    if(IGV->waypoints.size()){
-        // draw the next waypoint.. 
-        WayPoint* wp = IGV->waypoints.next();
-        cout << wp->coord_x << " " << wp->coord_y << endl;
-        glColor3f (1, 0, 0);
-        glBegin (GL_QUADS);
-            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
-            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
-            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
-            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
-        glEnd();  
-
-        std::queue <WayPoint*> wp_queue = IGV->waypoints.getWaypoint_Q();
-        wp_queue.pop();
-        int wp_length = wp_queue.size();
-
-        glColor3f (0.5, 0.2, 0.9);
-        glBegin (GL_QUADS);
-        for(int iter = 0; iter < wp_length; iter++){
-            wp = wp_queue.front();
-            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
-            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y - wp->height_coord/2));
-            glVertex2f ((wp->coord_x + wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
-            glVertex2f ((wp->coord_x - wp->width_coord/2), (wp->coord_y + wp->height_coord/2) );
-            wp_queue.pop();
-        }
-        glEnd(); 
-    }  
+  
 
         
     //}
 
-    //target points
-    glColor3f (0, 0, 1);
-    glPointSize (6.0);
-    glBegin (GL_POINTS);
-        for (unsigned i=0; i<targetPoint.size(); i++){
-            //glVertex2f (targetPoint[i].x, targetPoint[i].y);
-        }
-    glEnd();
+
 
 
     //SHOW THE REAL MAP
@@ -434,13 +427,34 @@ static void display(void)
     }
 
 
-    // THIS REALLY should be moved to it's own draw function... 
-    // for now this just causes the obejcts within the IGV's 
-    // search radius to glow a pink color..
-    if(going){
-        update();
-    } // end if going and simuating the IGV
 
+    if(going){
+        update();   // SIMULATE THE IGV_Bot
+    } 
+
+
+    // IGV Path taken 
+    // if the current path point is displaced from the previous path
+    // point by a certain distance.. then insert a new point/vertex into the pathTaken
+    unsigned pathTakenPointsCount = pathTaken.size();
+    float point_dx = (IGV->draw_coord_x - pathTaken[pathTakenPointsCount-1].x);
+    float point_dy = (IGV->draw_coord_y - pathTaken[pathTakenPointsCount-1].y);
+    if ((point_dx * point_dx + point_dy * point_dy) > pathTakenPointMinDistance){
+        vertex newpoint ( IGV->draw_coord_x,
+                         IGV->draw_coord_y);
+        pathTaken.push_back(newpoint);
+        if(pathTakenPointsCount > pathTakenMaxPoints){
+            pathTaken.erase(pathTaken.begin());   
+        }
+    }
+
+    glColor3f (0, 1, 0);
+    glPointSize (2.0);
+    glBegin (GL_POINTS);
+        for (unsigned i=0; i < pathTakenPointsCount; i++){
+            glVertex2f (pathTaken[i].x, pathTaken[i].y);   
+        }
+    glEnd();
 
     /* IGV */
     // yellow square (the IGV)  
@@ -456,6 +470,9 @@ static void display(void)
         glVertex2f (IGV->draw_coord_x + IGV->width_coord, IGV->draw_coord_y);
         glVertex2f (IGV->draw_coord_x + IGV->width_coord, IGV->draw_coord_y + IGV->height_coord);
     glEnd();
+
+
+
 
     // // best curves
     // for (int i=showBest; i>=0; i--){
@@ -506,10 +523,7 @@ void addCollidableToGrid(int x, int y){
     x = x % window.width;  
     y = y % window.height; 
 
-    vertex newpoint ( x*pixToXCoord + graphXMin,
-                      -y*pixToYCoord + graphYMax);
 
-    targetPoint.push_back(newpoint);
 
     if(TheGrid[grid_X(x)][grid_Y(y)]->object){
         // then its already there...
@@ -556,14 +570,18 @@ void clearTheGrid(){
 bool initialize ()
 {   
     MouseSelectedObject = NULL; //pls dont call delete on this..
+    int igv_x = 200, igv_y = 70;
+    vertex startpoint(  igv_x*pixToXCoord + graphXMin,
+                        -igv_y*pixToYCoord + graphYMax );
     if(IGV)
         delete IGV;
-    IGV = new IGV_Bot(200, 70);
+    IGV = new IGV_Bot(igv_x, igv_y);
+    pathTaken.clear();          // the list of x,y points that the igv has traveled
+    pathTaken.push_back(startpoint);
 
     clearTheGrid();
-    targetPoint.clear();
-    collidable_vector.clear();
-    IGV->waypoints.clear();
+    collidable_vector.clear();  // the list of objects we can collide with
+    IGV->waypoints.clear();     // the list of waypoints that the igv must travel to
     generation = 0;
 
     return true;

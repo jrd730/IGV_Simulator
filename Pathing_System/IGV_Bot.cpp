@@ -16,7 +16,7 @@ IGV_Bot::IGV_Bot(int _x, int _y, unsigned char _type) : WorldObject(_x, _y, _typ
 }
 
 
-bool IGV_Bot::runSearchWithinRadius(GridSquare* **GridSpace){
+bool IGV_Bot::checkForObstacles(GridSquare* **GridSpace){
 	    /* NEAR OR COLLISION */
     int min_grid_x = grid_X((this->x - this->searchRadius));
     int max_grid_x = grid_X((this->x + this->searchRadius));
@@ -99,6 +99,19 @@ bool IGV_Bot::moveToNextWaypoint(){
         }   
     }
     return true;
+}
+
+bool IGV_Bot::decideNextPathpoint(){
+	//given the igv's environment, 
+	//calculate the point where the 
+	//igv should move towards next..
+	if(this->waypoints.size() == 0){
+		vertex next_path_point(rand()%800, rand()%600);
+		this->waypoints.newWaypoint(next_path_point.x, next_path_point.y); 
+	} else {
+		return false; // did not adda new path point
+	}
+	return true; //decided a new pathpoint was necessary.. (could have overwritten or added a new one)
 }
 
 bool IGV_Bot::addObjectToMap(WorldObject* worldobj){

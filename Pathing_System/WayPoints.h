@@ -13,7 +13,7 @@ class WayPoint : public WorldObject
 {
 public:
 	WayPoint();
-	WayPoint(int _x, int _y, unsigned char _type = 1);
+	WayPoint(int _x, int _y, unsigned char _type = 1);	//x,y are in pixels
 	~WayPoint();
 
 	void glow();

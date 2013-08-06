@@ -68,6 +68,13 @@ class IGV_Bot : public WorldObject
         float fractionalDistance_x ;    // the accumulated & saved distance that hasn't been travelled 
         float fractionalDistance_y ;    //  but should be travelled eventually.. so collect it..
 
+        double wheelBase, 
+            tireDiameter,
+            angularVelocity,
+            maxAngularVelocity,
+            leftVelocity, 
+            rightVelocity,
+            rotation;
 };
 
 #endif

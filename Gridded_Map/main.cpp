@@ -89,8 +89,8 @@ float pixToYCoord = graphYRange/window.height;
 
 /* --------------- GRID PROPERTIES --------------- */
 // GRID width & height of entire window..
-const  int grid_blocks_x   = 50; // of the width of the screen
-const  int grid_blocks_y   = 50;
+const  int grid_blocks_x   = 200; // of the width of the screen
+const  int grid_blocks_y   = 200;
 
 
 const  float pix_per_grid_block_x = (window.width * 1.0) / (grid_blocks_x);        

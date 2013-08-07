@@ -302,7 +302,7 @@ static void mouse (int button, int state, int x, int y)
                 // 
                 //if the current select grid square contains teh IGV,
                 // tehn select the IGV..
-                if ( TheGrid[grid_X(x)][grid_Y(y)]->containsIGV() ){
+                if ( TheGrid[grid_X(x)][grid_Y(y)] ){
                     IGV->moveTo(x, y);
                 } else {
 
@@ -329,7 +329,7 @@ static void mouse (int button, int state, int x, int y)
 static void idle(void)
 {
     if (going){
-         //update();
+         update();
     }
     glutPostRedisplay();  // calls display()
     //sleep (15);
@@ -429,7 +429,7 @@ static void display(void)
 
 
     if(going){
-        update();   // SIMULATE THE IGV_Bot
+        //update();   // SIMULATE THE IGV_Bot // see idle task
     } 
 
 

@@ -18,7 +18,7 @@ class GridSquare {
             if(object){
                 object->glow();
             }
-            else {
+            else { 
                 perform_glow_effect_grid(coord_x, coord_y, width, height); 
             }
         }

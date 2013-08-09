@@ -50,6 +50,7 @@ typedef long double     ld;
 #include "Globals.h"
 #include "GridSquare.h"
 #include "CollidableObject.h"
+#include "Grid.h"
 
 
 
@@ -116,9 +117,6 @@ float theta[] = {0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0, 360.0};
 long double randomFloat ();
 bool initialize ();
 void update ();
-void addCollidableToGrid(int x, int y);
-void fillGrid();
-void clearTheGrid();
 
 
 //bool operator < (PSeries first, PSeries second){return first.difference < second.difference;}
@@ -129,9 +127,9 @@ void clearTheGrid();
         Graph coordinates start at the center and are proportional 
             to 1 pixel  by  graphXRange/width and graphYRange/height.
 
-        THE GRID starts at the top left (sits TheGrid[0][0])
+        THE GRID starts at the top left (sits theGrid[0][0])
 
-        Problem:    Map pixel clicks to TheGrid Index..
+        Problem:    Map pixel clicks to theGrid Index..
 */
 // ----------------------------------   - - - - MAP OBJECTS
 //Target Points
@@ -139,15 +137,16 @@ vector <vertex> pathTaken;
 float pathTakenPointMinDistance = 0.2;
 uint   pathTakenMaxPoints = 30;
 
-//objects that are collidable..
-vector <WorldObject*> collidable_vector;
+
+
 
 
 WorldObject* MouseSelectedObject;           //with the mouse selects the object in the world 
 
 /* THE GRID */
-GridSquare*  **TheGrid;  // must be initialized
+//GridSquare*  **theGrid;  // must be initialized
 
+Grid* theGrid;
 
 // --------------------------------//
 // ------   IGV  SETTINGS   ------ //
@@ -167,18 +166,13 @@ void  initializeViewMatrix (){
     pixToYCoord = graphYRange/window.height;
 }
 
-long double randomFloat (){
-    long double x=((long double)rand()/(long double)RAND_MAX);
-    return x;
-}
-
 
 /* Calling during idling... Animates the stuff on the screen 
     Main logic...
 */
 void update (){
     glColor3f (1, 0.2, 0.4);                    // set "glowing" color for obstacle found..
-    IGV->checkForObstacles(TheGrid);        // searching the 2d space for collidable objects..
+    IGV->checkForObstacles(theGrid);        // searching the 2d space for collidable objects..
 
     // IGV->checkForObstacles() .. 
     // IGV->storeObstaclesFound()... if not already stored
@@ -226,7 +220,7 @@ static void key(unsigned char key, int x, int y){
                 if(STATE_ADD_WAYPOINT & 1)
                     IGV->waypoints.newWaypoint(rand()%window.width, rand()%window.height);
                 else 
-                    addCollidableToGrid( rand()%window.width, rand()%window.height);
+                    theGrid->addCollidableToGrid( rand()%window.width, rand()%window.height);
 
             }
         }
@@ -238,7 +232,7 @@ static void key(unsigned char key, int x, int y){
             initialize();
         break;
         case 'f':
-            fillGrid();
+            theGrid->fillGrid();
         break;
 
         case '~': {
@@ -284,7 +278,7 @@ static void motion (int x, int y)
             IGV->moveTo(x, y);
     } else if(cur_mouseclick_buttonpressed == GLUT_RIGHT_BUTTON){
         if(STATE_ADD_OBSTACLE){
-            addCollidableToGrid(x, y);
+            theGrid->addCollidableToGrid(x, y);
         }
     }
     // cout << "mouse clicked at " << x << " " << y << endl;
@@ -302,7 +296,7 @@ static void mouse (int button, int state, int x, int y)
                 // 
                 //if the current select grid square contains teh IGV,
                 // tehn select the IGV..
-                if ( TheGrid[grid_X(x)][grid_Y(y)] ){
+                if ( theGrid->at(x,y) != NULL ){
                     IGV->moveTo(x, y);
                 } else {
 
@@ -313,7 +307,7 @@ static void mouse (int button, int state, int x, int y)
             case GLUT_RIGHT_BUTTON:
                 cur_mouseclick_buttonpressed = GLUT_RIGHT_BUTTON;
                 if(STATE_ADD_OBSTACLE){
-                    addCollidableToGrid(x, y);
+                    theGrid->addCollidableToGrid(x, y);
                 } else if(STATE_ADD_WAYPOINT){
                     IGV->waypoints.newWaypoint(x, y);
                 }
@@ -329,7 +323,7 @@ static void mouse (int button, int state, int x, int y)
 static void idle(void)
 {
     if (going){
-         update();
+         //update();
     }
     glutPostRedisplay();  // calls display()
     //sleep (15);
@@ -396,26 +390,13 @@ static void display(void)
     glEnd();
 
 
-    /* Objects on the Real Map */
-
-    // draw red square target
-    //drawTarget();
-
-    //void drawTarget(){
-  
-
-        
-    //}
-
-
-
 
     //SHOW THE REAL MAP
     if(DRAW_SIM_REAL_MAP){
         // show the collidable objects on the map..
         glColor3f (0, 0.1, 1);
-        for (unsigned int i = 0; i < collidable_vector.size(); ++i){
-            collidable_vector[i]->glow();
+        for (unsigned int i = 0; i < theGrid->collidable_vector.size(); ++i){
+            theGrid->collidable_vector[i]->glow();
         }
     }      
 
@@ -426,11 +407,9 @@ static void display(void)
          IGV->displayMap();         // (currently the IGV tells the elements in the map to glow.. )
     }
 
-
-
-    if(going){
-        //update();   // SIMULATE THE IGV_Bot // see idle task
-    } 
+    if (going){
+         update(); // iremember now.. this is here so we can SEE the igv search nearby obstacles
+    }
 
 
     // IGV Path taken 
@@ -517,55 +496,11 @@ static void resize(int w, int h)
     glLoadIdentity();
 }
 
-void addCollidableToGrid(int x, int y){
-    x &= INT_MAX;   // no negatives....(the x and y values are mirrored)
-    y &= INT_MAX;
-    x = x % window.width;  
-    y = y % window.height; 
 
 
 
-    if(TheGrid[grid_X(x)][grid_Y(y)]->object){
-        // then its already there...
-    } else {
-        TheGrid[grid_X(x)][grid_Y(y)]->object = new CollidableObject((x), (y));
-        TheGrid[grid_X(x)][grid_Y(y)]->is_object = true;
-        //cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
-        collidable_vector.push_back(TheGrid[grid_X(x)][grid_Y(y)]->object);
-    }
-}
-
-/* assumes the grid has been initialized at least once */
-void fillGrid(){
-    for (int i = 0; i < grid_blocks_x; ++i)
-    {
-        for (int j = 0; j < grid_blocks_y; ++j)
-        {
-                if(TheGrid[i][j]->object){
-                    // then its already there...
-                } else {
-                    TheGrid[i][j]->object 
-                        = new CollidableObject( i*pix_per_grid_block_x + pix_per_grid_block_x/2,
-                                                j*pix_per_grid_block_y + pix_per_grid_block_y/2);
-                    TheGrid[i][j]->is_object = true;
-                    //cout << x << " " << grid_X(x) << " " <<  y << " " << grid_Y(y) << endl;
-                    collidable_vector.push_back(TheGrid[i][j]->object);
-                }
-        }
-    }
-}
 
 
-void clearTheGrid(){
-    for (int i = 0; i < grid_blocks_x; ++i)
-    {
-        for (int j = 0; j < grid_blocks_y; ++j)
-        {
-            delete TheGrid[i][j];
-            TheGrid[i][j] = new GridSquare(i, j, NULL);
-        }
-    }
-}
 
 bool initialize ()
 {   
@@ -577,28 +512,18 @@ bool initialize ()
         delete IGV;
     IGV = new IGV_Bot(igv_x, igv_y);
     pathTaken.clear();          // the list of x,y points that the igv has traveled
-    pathTaken.push_back(startpoint);
+    pathTaken.push_back(startpoint); // start point 
 
-    clearTheGrid();
-    collidable_vector.clear();  // the list of objects we can collide with
+    theGrid->clearGrid();
+    theGrid->initGrid();
+    theGrid->collidable_vector.clear();  // the list of objects we can collide with
     IGV->waypoints.clear();     // the list of waypoints that the igv must travel to
     generation = 0;
 
     return true;
 }
 
-bool initGrid(int grid_width, int grid_height){
-    TheGrid = new GridSquare**[grid_width];
-    for (int i = 0; i < grid_width; ++i){
-        TheGrid[i] = new GridSquare*[grid_height];
-            for (int j = 0; j < grid_height; ++j)
-            {
-                TheGrid[i][j] = NULL;
-            }
-    }
 
-    return true;
-}
 
 int main(int argc, char *argv[])
 {
@@ -617,8 +542,8 @@ int main(int argc, char *argv[])
     }
 
     cout << "Initializing Grid..." ;
+    theGrid = Grid::init(grid_blocks_x, grid_blocks_y);
     cout << "complete!\n" ;
-    initGrid(grid_blocks_x, grid_blocks_y);
     cout << "Initializing Simulator...";
     initialize ();
     cout << "complete!\n\n" ;

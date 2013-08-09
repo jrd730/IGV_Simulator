@@ -16,7 +16,7 @@ IGV_Bot::IGV_Bot(int _x, int _y, unsigned char _type) : WorldObject(_x, _y, _typ
 }
 
 
-bool IGV_Bot::checkForObstacles(GridSquare* **GridSpace){
+bool IGV_Bot::checkForObstacles(Grid* grid){
 	    /* NEAR OR COLLISION */
     int min_grid_x = grid_X((this->x - this->searchRadius));
     int max_grid_x = grid_X((this->x + this->searchRadius));
@@ -48,19 +48,19 @@ bool IGV_Bot::checkForObstacles(GridSquare* **GridSpace){
     for(int grid_iter_y = min_grid_y; grid_iter_y <= max_grid_y; ++grid_iter_y){
         for(int grid_iter_x = min_grid_x; grid_iter_x <= max_grid_x; ++grid_iter_x){ 
                 // std::cout << "Searching..: (" << grid_iter_x << "," << grid_iter_y << ").." << std::endl;
-                if (GridSpace[grid_iter_x][grid_iter_y]->is_object){  
+                if (grid->at_grid_coord(grid_iter_x, grid_iter_y)->is_object){  
                     // do you have an object??
                     // if so then  do some stuff with the object..
                      std::cout << "Object found at: (" << grid_iter_x << "," << grid_iter_y << ") type: "
-                        << GridSpace[grid_iter_x][grid_iter_y]->object->type << std::endl;
-                    GridSpace[grid_iter_x][grid_iter_y]->glow();
+                        << grid->at_grid_coord(grid_iter_x, grid_iter_y)->object->type << std::endl;
+                    grid->at_grid_coord(grid_iter_x, grid_iter_y)->glow();
                     // discover object.. discover type.. now insert into the igv map..
 
                     // ASSERT: the x and y are within the window.. at this point obejcts from the world are
                     //  guarenteed to fit within the igv's world..(although it may seem contrary)
                     if(!this->objectAt(grid_iter_x, grid_iter_y)){
-                        WorldObject* wobj = GridSpace[grid_iter_x][grid_iter_y]->object;
-                        this->addObjectToMap(new CollidableObject(wobj->x, wobj->y));
+                        WorldObject* wobj = grid->at_grid_coord(grid_iter_x, grid_iter_y)->object;
+                        this->addObjectToMap(new CollidableObject(wobj->x, wobj->y)); //this refers to IGV
                     }
                 }
         }
